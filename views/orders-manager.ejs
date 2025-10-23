@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <title>Amado - Quản lý Đơn hàng</title>
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    <style>
+        :root {
+            --primary: #2962ff;
+            --success: #00c853;
+            --warning: #ffab00;
+            --danger: #ff1744;
+            --info: #00b8d4;
+            --dark: #263238;
+            --light: #f5f7fa;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .status-pending { 
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7); 
+            color: #856404; 
+            border: 1px solid #ffeaa7;
+        }
+        .status-preparing { 
+            background: linear-gradient(135deg, #d1ecf1, #a8e6cf); 
+            color: #0c5460; 
+            border: 1px solid #a8e6cf;
+        }
+        .status-shipping { 
+            background: linear-gradient(135deg, #cce7ff, #82b1ff); 
+            color: #004085; 
+            border: 1px solid #82b1ff;
+        }
+        .status-delivered { 
+            background: linear-gradient(135deg, #d4edda, #69f0ae); 
+            color: #155724; 
+            border: 1px solid #69f0ae;
+        }
+        .status-cancelled { 
+            background: linear-gradient(135deg, #f8d7da, #ff8a80); 
+            color: #721c24; 
+            border: 1px solid #ff8a80;
+        }
+        
+        .action-btn { 
+            margin-right: 5px; 
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .table-responsive { 
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card h5 {
+            opacity: 0.9;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px 12px;
+        }
+        
+        /* ĐIỀU CHỈNH ĐỘ RỘNG CÁC CỘT */
+        .table thead th:nth-child(1) { /* Cột mã đơn hàng */
+            width: 120px;
+        }
+        .table thead th:nth-child(2) { /* Cột khách hàng */
+            width: 150px;
+        }
+        .table thead th:nth-child(3) { /* Cột sản phẩm */
+            width: 200px;
+        }
+        .table thead th:nth-child(4) { /* Cột tổng tiền */
+            width: 120px;
+        }
+        .table thead th:nth-child(5) { /* Cột địa chỉ */
+            width: 180px;
+        }
+        .table thead th:nth-child(6) { /* Cột trạng thái - MỞ RỘNG */
+            width: 140px;
+        }
+        .table thead th:nth-child(7) { /* Cột thao tác */
+            width: 100px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+            transform: scale(1.01);
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            padding: 12px 8px;
+        }
+        
+        /* Căn chỉnh nội dung trong các cột */
+        .table tbody td:nth-child(1) { /* Mã đơn hàng */
+            text-align: center;
+            font-size: 11px;
+        }
+        .table tbody td:nth-child(4) { /* Tổng tiền */
+            text-align: right;
+        }
+        .table tbody td:nth-child(6) { /* Trạng thái */
+            text-align: center;
+        }
+        .table tbody td:nth-child(7) { /* Thao tác */
+            text-align: center;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 3px;
+            border: none;
+            color: #667eea;
+        }
+        
+        .order-id {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 11px;
+        }
+        
+        .customer-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .product-list {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .product-item {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        
+        .total-amount {
+            font-weight: bold;
+            color: var(--success);
+            font-size: 14px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+            border-radius: 25px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="dashboard-main-wrapper">
+        <!-- Navbar -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard">
+                    <img class="logo-img" src="/public/img/core-img/logo.png" alt="logo">
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="<%= customer.avatar %>" alt="" class="user-avatar-md rounded-circle">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %></h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Tài khoản</a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout"><i class="fas fa-power-off mr-2"></i>Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">Menu</li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1">
+                                    <i class="fa fa-fw fa-user-circle"></i>Dashboard
+                                </a>
+                                <div id="submenu-1" class="collapse submenu">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu show">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link active" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content">
+                    <!-- Page Header -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <h2 class="pageheader-title"><i class="fas fa-shopping-cart mr-2"></i>Quản lý Đơn hàng</h2>
+                                <div class="page-breadcrumb">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Dashboard</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Quản lý đơn hàng</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="filter-section">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="search-box">
+                                            <i class="fas fa-search"></i>
+                                            <input type="text" class="form-control" placeholder="Tìm kiếm đơn hàng..." id="searchOrder">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <select class="form-control" id="statusFilter">
+                                                <option value="">Tất cả trạng thái</option>
+                                                <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                                <option value="Chuẩn bị hàng">Chuẩn bị hàng</option>
+                                                <option value="Đang giao hàng">Đang giao hàng</option>
+                                                <option value="Đã giao hàng">Đã giao hàng</option>
+                                                <option value="Đã hủy">Đã hủy</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="row">
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-shopping-bag mr-2"></i>Tổng đơn hàng</h5>
+                                <div class="metric-value d-inline-block">
+                                    <h1 class="mb-1"><%= bills.length %></h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">
+                                <h5><i class="fas fa-clock mr-2"></i>Chờ xác nhận</h5>
+                                <div class="metric-value d-inline-block">
+                                    <% 
+                                        let pendingCount = 0;
+                                        bills.forEach(bill => {
+                                            if (bill.status === 'Chờ xác nhận') pendingCount++;
+                                        });
+                                    %>
+                                    <h1 class="mb-1"><%= pendingCount %></h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);">
+                                <h5><i class="fas fa-box mr-2"></i>Đang chuẩn bị</h5>
+                                <div class="metric-value d-inline-block">
+                                    <% 
+                                        let preparingCount = 0;
+                                        bills.forEach(bill => {
+                                            if (bill.status === 'Chuẩn bị hàng') preparingCount++;
+                                        });
+                                    %>
+                                    <h1 class="mb-1"><%= preparingCount %></h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                                <h5><i class="fas fa-shipping-fast mr-2"></i>Đang giao hàng</h5>
+                                <div class="metric-value d-inline-block">
+                                    <% 
+                                        let shippingCount = 0;
+                                        bills.forEach(bill => {
+                                            if (bill.status === 'Đang giao hàng') shippingCount++;
+                                        });
+                                    %>
+                                    <h1 class="mb-1"><%= shippingCount %></h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+                                <h5><i class="fas fa-check-circle mr-2"></i>Đã giao hàng</h5>
+                                <div class="metric-value d-inline-block">
+                                    <% 
+                                        let deliveredCount = 0;
+                                        bills.forEach(bill => {
+                                            if (bill.status === 'Đã giao hàng') deliveredCount++;
+                                        });
+                                    %>
+                                    <h1 class="mb-1"><%= deliveredCount %></h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);">
+                                <h5><i class="fas fa-times-circle mr-2"></i>Đã hủy</h5>
+                                <div class="metric-value d-inline-block">
+                                    <% 
+                                        let cancelledCount = 0;
+                                        bills.forEach(bill => {
+                                            if (bill.status === 'Đã hủy') cancelledCount++;
+                                        });
+                                    %>
+                                    <h1 class="mb-1"><%= cancelledCount %></h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Table -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Danh sách đơn hàng</h5>
+                                    <span class="badge badge-primary">Tổng: <%= bills.length %> đơn hàng</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="ordersTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mã đơn hàng</th>
+                                                    <th>Khách hàng</th>
+                                                    <th>Sản phẩm</th>
+                                                    <th>Tổng tiền</th>
+                                                    <th>Địa chỉ</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% 
+                                                    const startIndex = (page - 1) * numberItemPerpage;
+                                                    const endIndex = Math.min(startIndex + numberItemPerpage, bills.length);
+                                                    
+                                                    for (let i = startIndex; i < endIndex; i++) {
+                                                        const bill = bills[i];
+                                                        let total = 0;
+                                                        bill.listProduct.forEach(product => {
+                                                            total += parseInt(product.productPrice) * product.amount;
+                                                        });
+                                                %>
+                                                <tr data-status="<%= bill.status %>" data-customer="<%= bill.displayName.firstName + " " + bill.displayName.lastName %>">
+                                                    <td>
+                                                        <span class="order-id" title="<%= bill._id %>">
+                                                            <%= bill._id.toString().substring(0, 8) %>...
+                                                        </span>
+                                                    </td>
+                                                    <td><span class="customer-name"><%= bill.displayName.firstName + " " + bill.displayName.lastName %></span></td>
+                                                    <td>
+                                                        <div class="product-list">
+                                                            <% bill.listProduct.forEach(product => { %>
+                                                                <div class="product-item">
+                                                                    <small><%= product.productName %> x <%= product.amount %></small>
+                                                                </div>
+                                                            <% }); %>
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="total-amount"><%= total.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %> đ</span></td>
+                                                    <td><small><%= bill.address %></small></td>
+                                                    <td>
+                                                        <% 
+                                                            let statusClass = '';
+                                                            switch(bill.status) {
+                                                                case 'Chờ xác nhận': statusClass = 'status-pending'; break;
+                                                                case 'Chuẩn bị hàng': statusClass = 'status-preparing'; break;
+                                                                case 'Đang giao hàng': statusClass = 'status-shipping'; break;
+                                                                case 'Đã giao hàng': statusClass = 'status-delivered'; break;
+                                                                case 'Đã hủy': statusClass = 'status-cancelled'; break;
+                                                                default: statusClass = 'status-pending';
+                                                            }
+                                                        %>
+                                                        <span class="status-badge <%= statusClass %>"><%= bill.status %></span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <a href="/admin/dashboard/orders-manager/detail/<%= bill._id %>" 
+                                                            class="btn btn-sm btn-info action-btn" 
+                                                            title="Xem chi tiết">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            <a href="/admin/dashboard/orders-manager/update/<%= bill._id %>" 
+                                                            class="btn btn-sm btn-primary action-btn" 
+                                                            title="Cập nhật">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <% if (bill.status !== 'Đã hủy' && bill.status !== 'Đã giao hàng') { %>
+                                                            <a href="/admin/dashboard/orders-manager/delete/<%= bill._id %>" 
+                                                            class="btn btn-sm btn-danger action-btn" 
+                                                            title="Hủy đơn hàng"
+                                                            onclick="return confirmAction('hủy', '<%= bill._id %>')">
+                                                                <i class="fas fa-times"></i>
+                                                            </a>
+                                                            <% } %>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination -->
+                                    <div class="pagination-container mt-4">
+                                        <nav aria-label="Page navigation">
+                                            <ul class="pagination justify-content-center">
+                                                <% 
+                                                    const totalPages = Math.ceil(bills.length / numberItemPerpage);
+                                                    const maxPagesToShow = 5;
+                                                    let startPage = Math.max(1, page - Math.floor(maxPagesToShow / 2));
+                                                    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                                                    
+                                                    if (endPage - startPage + 1 < maxPagesToShow) {
+                                                        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                                                    }
+                                                %>
+                                                
+                                                <% if (page > 1) { %>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="/admin/dashboard/orders-manager/<%= page - 1 %>" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <% } %>
+                                                
+                                                <% for (let p = startPage; p <= endPage; p++) { %>
+                                                <li class="page-item <%= p == page ? 'active' : '' %>">
+                                                    <a class="page-link" href="/admin/dashboard/orders-manager/<%= p %>"><%= p %></a>
+                                                </li>
+                                                <% } %>
+                                                
+                                                <% if (page < totalPages) { %>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="/admin/dashboard/orders-manager/<%= page + 1 %>" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <% } %>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            Copyright © 2018 Concept. All rights reserved. Dashboard by <a href="https://colorlib.com/wp/">VanLuanIT2004</a>.
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            <div class="text-md-right footer-links d-none d-sm-block">
+                                <a href="javascript: void(0);">Về cửa hàng</a>
+                                <a href="javascript: void(0);">Ủng hộ</a>
+                                <a href="javascript: void(0);">Liên hệ với chúng tôi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        // Hiệu ứng loading
+        function showLoading() {
+            $('.loading-overlay').fadeIn();
+        }
+        
+        function hideLoading() {
+            $('.loading-overlay').fadeOut();
+        }
+        
+        // Xác nhận hành động
+        function confirmAction(action, orderId) {
+            return confirm(`Bạn có chắc chắn muốn ${action} đơn hàng ${orderId}?`);
+        }
+        
+        // Tìm kiếm và lọc
+        $(document).ready(function() {
+            $('#searchOrder').on('keyup', function() {
+                const value = $(this).val().toLowerCase();
+                filterOrders();
+            });
+            
+            $('#statusFilter').on('change', function() {
+                filterOrders();
+            });
+            
+            function filterOrders() {
+                const searchValue = $('#searchOrder').val().toLowerCase();
+                const statusValue = $('#statusFilter').val();
+                
+                $('#ordersTable tbody tr').each(function() {
+                    const customerName = $(this).data('customer').toLowerCase();
+                    const status = $(this).data('status');
+                    
+                    const nameMatch = customerName.includes(searchValue);
+                    const statusMatch = statusValue === '' || status === statusValue;
+                    
+                    if (nameMatch && statusMatch) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+            
+            // Hiệu ứng hover cho card
+            $('.card').hover(
+                function() {
+                    $(this).css('transform', 'translateY(-5px)');
+                },
+                function() {
+                    $(this).css('transform', 'translateY(0)');
+                }
+            );
+            
+            // Hiệu ứng click cho action buttons
+            $('.action-btn').on('click', function() {
+                showLoading();
+                setTimeout(hideLoading, 500);
+            });
+            
+            // Tooltip cho mã đơn hàng
+            $('.order-id').hover(function() {
+                $(this).attr('title', $(this).parent().find('.order-id').attr('title'));
+            });
+        });
+    </script>
+    
+    <% if(message && message.length > 0){ %>
+        <script>
+            toastr.success('<%= message %>','Thông báo', {timeOut: 3000, progressBar: true, closeButton: true});
+        </script>
+    <% } %>
+</body>
+</html>

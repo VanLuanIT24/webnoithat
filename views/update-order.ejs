@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <title>Amado - Cập nhật Đơn hàng</title>
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    <style>
+        :root {
+            --primary: #2962ff;
+            --success: #00c853;
+            --warning: #ffab00;
+            --danger: #ff1744;
+            --info: #00b8d4;
+            --dark: #263238;
+            --light: #f5f7fa;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .status-pending { 
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7); 
+            color: #856404; 
+            border: 1px solid #ffeaa7;
+        }
+        .status-preparing { 
+            background: linear-gradient(135deg, #d1ecf1, #a8e6cf); 
+            color: #0c5460; 
+            border: 1px solid #a8e6cf;
+        }
+        .status-shipping { 
+            background: linear-gradient(135deg, #cce7ff, #82b1ff); 
+            color: #004085; 
+            border: 1px solid #82b1ff;
+        }
+        .status-delivered { 
+            background: linear-gradient(135deg, #d4edda, #69f0ae); 
+            color: #155724; 
+            border: 1px solid #69f0ae;
+        }
+        .status-cancelled { 
+            background: linear-gradient(135deg, #f8d7da, #ff8a80); 
+            color: #721c24; 
+            border: 1px solid #ff8a80;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: none;
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .product-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .address-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #ff1744;
+        }
+        
+        .back-btn {
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+        
+        .status-select {
+            border-radius: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status-select option {
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .total-section {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .customer-info {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="dashboard-main-wrapper">
+        <!-- Navbar -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard">
+                    <img class="logo-img" src="/public/img/core-img/logo.png" alt="logo">
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="<%= customer.avatar %>" alt="" class="user-avatar-md rounded-circle">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %></h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Tài khoản</a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout"><i class="fas fa-power-off mr-2"></i>Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">Menu</li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1">
+                                    <i class="fa fa-fw fa-user-circle"></i>Dashboard
+                                </a>
+                                <div id="submenu-1" class="collapse submenu">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu show">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link active" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content">
+                    <!-- Page Header -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <h2 class="pageheader-title"><i class="fas fa-edit mr-2"></i>Cập nhật Đơn hàng</h2>
+                                <div class="page-breadcrumb">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Dashboard</a></li>
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard/orders-manager" class="breadcrumb-link">Quản lý đơn hàng</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Cập nhật đơn hàng</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Back Button -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <a href="javascript:history.back()" class="btn btn-light back-btn">
+                                <i class="fas fa-arrow-left mr-2"></i>Quay lại
+                            </a>
+                        </div>
+                    </div>
+
+                    <form id="updateOrderForm" action="/admin/dashboard/orders-manager/update/<%= bill._id %>" method="POST">
+                        <div class="row">
+                            <!-- Thông tin đơn hàng -->
+                            <div class="col-xl-8 col-lg-7 col-md-12">
+                                <!-- Thông tin khách hàng -->
+                                <div class="card fade-in">
+                                    <div class="card-header">
+                                        <h4 class="mb-0"><i class="fas fa-user mr-2"></i>Thông tin khách hàng</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label required">Họ và tên</label>
+                                                    <input type="text" class="form-control" name="name" 
+                                                           value="<%= bill.displayName.firstName %> <%= bill.displayName.lastName %>" 
+                                                           required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Số điện thoại</label>
+                                                    <input type="text" class="form-control" name="phone" 
+                                                           value="<%= bill.phoneNumber || '' %>">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Địa chỉ giao hàng -->
+                                <div class="card slide-in">
+                                    <div class="card-header">
+                                        <h4 class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i>Địa chỉ giao hàng</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label required">Tỉnh/Thành phố</label>
+                                                    <select class="form-select" id="city" name="city" required>
+                                                        <option value="">Chọn tỉnh/thành phố</option>
+                                                        <!-- Options sẽ được load bằng JavaScript -->
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label required">Quận/Huyện</label>
+                                                    <select class="form-select" id="district" name="district" required disabled>
+                                                        <option value="">Chọn quận/huyện</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label required">Phường/Xã</label>
+                                                    <select class="form-select" id="ward" name="ward" required disabled>
+                                                        <option value="">Chọn phường/xã</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label required">Địa chỉ cụ thể</label>
+                                            <textarea class="form-control" name="address" rows="3" required placeholder="Số nhà, tên đường..."><%= bill.address.split(',')[0] %></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Danh sách sản phẩm -->
+                                <div class="card slide-in">
+                                    <div class="card-header">
+                                        <h4 class="mb-0"><i class="fas fa-boxes mr-2"></i>Danh sách sản phẩm</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <% 
+                                            let totalAmount = 0;
+                                            let totalProducts = 0;
+                                            bill.listProduct.forEach((product, index) => {
+                                                totalAmount += parseInt(product.productPrice) * product.amount;
+                                                totalProducts += parseInt(product.amount);
+                                        %>
+                                        <div class="product-card">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-2">
+                                                    <% if(product.productImage && product.productImage.length > 0) { %>
+                                                        <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>" 
+                                                             class="img-fluid rounded" style="max-height: 80px;">
+                                                    <% } else { %>
+                                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                             style="width: 80px; height: 80px;">
+                                                            <i class="fas fa-image text-muted"></i>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6 class="mb-1"><%= product.productName %></h6>
+                                                    <p class="text-muted mb-0">Mã SP: <%= product.productCode || 'N/A' %></p>
+                                                </div>
+                                                <div class="col-md-2 text-center">
+                                                    <strong>Số lượng: <%= product.amount %></strong>
+                                                </div>
+                                                <div class="col-md-2 text-right">
+                                                    <h6 class="text-success mb-0">
+                                                        <%= (parseInt(product.productPrice) * product.amount).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %> đ
+                                                    </h6>
+                                                    <small class="text-muted"><%= parseInt(product.productPrice).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %> đ/SP</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% }); %>
+                                        
+                                        <div class="row mt-4">
+                                            <div class="col-12 text-right">
+                                                <h5 class="text-primary">
+                                                    Tổng cộng: <%= totalAmount.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %> đ
+                                                </h5>
+                                                <p class="text-muted">(<%= totalProducts %> sản phẩm)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thông tin thanh toán và trạng thái -->
+                            <div class="col-xl-4 col-lg-5 col-md-12">
+                                <!-- Trạng thái đơn hàng -->
+                                <div class="card fade-in">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Trạng thái đơn hàng</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label required">Cập nhật trạng thái</label>
+                                            <select class="form-select status-select" name="status" required>
+                                                <option value="Chờ xác nhận" <%= bill.status === 'Chờ xác nhận' ? 'selected' : '' %>>Chờ xác nhận</option>
+                                                <option value="Chuẩn bị hàng" <%= bill.status === 'Chuẩn bị hàng' ? 'selected' : '' %>>Chuẩn bị hàng</option>
+                                                <option value="Đang giao hàng" <%= bill.status === 'Đang giao hàng' ? 'selected' : '' %>>Đang giao hàng</option>
+                                                <option value="Đã giao hàng" <%= bill.status === 'Đã giao hàng' ? 'selected' : '' %>>Đã giao hàng</option>
+                                                <option value="Đã hủy" <%= bill.status === 'Đã hủy' ? 'selected' : '' %>>Đã hủy</option>
+                                            </select>
+                                        </div>
+                                        <div class="text-center">
+                                            <% 
+                                                let statusClass = '';
+                                                switch(bill.status) {
+                                                    case 'Chờ xác nhận': statusClass = 'status-pending'; break;
+                                                    case 'Chuẩn bị hàng': statusClass = 'status-preparing'; break;
+                                                    case 'Đang giao hàng': statusClass = 'status-shipping'; break;
+                                                    case 'Đã giao hàng': statusClass = 'status-delivered'; break;
+                                                    case 'Đã hủy': statusClass = 'status-cancelled'; break;
+                                                    default: statusClass = 'status-pending';
+                                                }
+                                            %>
+                                            <span class="status-badge <%= statusClass %>" id="currentStatus">
+                                                <%= bill.status %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin thanh toán -->
+                                <div class="card slide-in">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-credit-card mr-2"></i>Thông tin thanh toán</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phương thức thanh toán</label>
+                                            <input type="text" class="form-control" value="<%= bill.paymentMethod || 'Thanh toán khi nhận hàng' %>" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tổng tiền</label>
+                                            <input type="text" class="form-control bg-light" value="<%= totalAmount.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %> đ" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mã đơn hàng</label>
+                                            <input type="text" class="form-control bg-light" value="<%= bill._id %>" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Yêu cầu đặc biệt -->
+                                <% if(bill.resquest) { %>
+                                <div class="card slide-in">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-sticky-note mr-2"></i>Yêu cầu đặc biệt</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0"><%= bill.resquest %></p>
+                                    </div>
+                                </div>
+                                <% } %>
+
+                                <!-- Actions -->
+                                <div class="card fade-in">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-cogs mr-2"></i>Thao tác</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save mr-2"></i>Cập nhật đơn hàng
+                                            </button>
+                                            <a href="/admin/dashboard/orders-manager/detail/<%= bill._id %>" class="btn btn-info">
+                                                <i class="fas fa-eye mr-2"></i>Xem chi tiết
+                                            </a>
+                                            <% if(bill.status !== 'Đã hủy' && bill.status !== 'Đã giao hàng') { %>
+                                            <a href="/admin/dashboard/orders-manager/delete/<%= bill._id %>" 
+                                               class="btn btn-danger"
+                                               onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                                <i class="fas fa-times mr-2"></i>Hủy đơn hàng
+                                            </a>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            Copyright © 2018 Concept. All rights reserved. Dashboard by <a href="https://colorlib.com/wp/">VanLuanIT2004</a>.
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            <div class="text-md-right footer-links d-none d-sm-block">
+                                <a href="javascript: void(0);">Về cửa hàng</a>
+                                <a href="javascript: void(0);">Ủng hộ</a>
+                                <a href="javascript: void(0);">Liên hệ với chúng tôi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        // Hiệu ứng loading
+        function showLoading() {
+            $('.loading-overlay').fadeIn();
+        }
+        
+        function hideLoading() {
+            $('.loading-overlay').fadeOut();
+        }
+
+        // Cập nhật trạng thái hiển thị
+        function updateStatusDisplay() {
+            const status = $('select[name="status"]').val();
+            const statusBadge = $('#currentStatus');
+            
+            // Xóa tất cả các class cũ
+            statusBadge.removeClass('status-pending status-preparing status-shipping status-delivered status-cancelled');
+            
+            // Thêm class mới dựa trên trạng thái
+            switch(status) {
+                case 'Chờ xác nhận':
+                    statusBadge.addClass('status-pending');
+                    break;
+                case 'Chuẩn bị hàng':
+                    statusBadge.addClass('status-preparing');
+                    break;
+                case 'Đang giao hàng':
+                    statusBadge.addClass('status-shipping');
+                    break;
+                case 'Đã giao hàng':
+                    statusBadge.addClass('status-delivered');
+                    break;
+                case 'Đã hủy':
+                    statusBadge.addClass('status-cancelled');
+                    break;
+            }
+            
+            // Cập nhật text
+            statusBadge.text(status);
+        }
+
+        // Xử lý địa chỉ
+        function loadAddressData() {
+            showLoading();
+            
+            // Giả lập dữ liệu địa chỉ (trong thực tế sẽ gọi API)
+            const cities = [
+                { Id: "01", Name: "Hà Nội" },
+                { Id: "79", Name: "Hồ Chí Minh" },
+                { Id: "31", Name: "Hải Phòng" },
+                { Id: "48", Name: "Đà Nẵng" }
+            ];
+            
+            const citySelect = $('#city');
+            cities.forEach(city => {
+                citySelect.append(`<option value="${city.Id}">${city.Name}</option>`);
+            });
+            
+            // Parse địa chỉ hiện tại để chọn giá trị mặc định
+            const currentAddress = '<%= bill.address %>';
+            // Logic parse địa chỉ sẽ được thêm ở đây
+            
+            setTimeout(hideLoading, 500);
+        }
+
+        // Xử lý khi form submit
+        $('#updateOrderForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return false;
+            }
+            
+            showLoading();
+            
+            // Hiển thị thông báo xác nhận
+            if (confirm('Bạn có chắc chắn muốn cập nhật đơn hàng này?')) {
+                this.submit();
+            } else {
+                hideLoading();
+            }
+        });
+
+        // Validate form
+        function validateForm() {
+            const name = $('input[name="name"]').val().trim();
+            const city = $('#city').val();
+            const district = $('#district').val();
+            const ward = $('#ward').val();
+            const address = $('textarea[name="address"]').val().trim();
+            
+            if (!name) {
+                toastr.error('Vui lòng nhập họ tên khách hàng');
+                return false;
+            }
+            
+            if (!city) {
+                toastr.error('Vui lòng chọn tỉnh/thành phố');
+                return false;
+            }
+            
+            if (!district) {
+                toastr.error('Vui lòng chọn quận/huyện');
+                return false;
+            }
+            
+            if (!ward) {
+                toastr.error('Vui lòng chọn phường/xã');
+                return false;
+            }
+            
+            if (!address) {
+                toastr.error('Vui lòng nhập địa chỉ cụ thể');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Xử lý khi trạng thái thay đổi
+        $('select[name="status"]').on('change', function() {
+            updateStatusDisplay();
+            
+            // Hiển thị cảnh báo nếu chuyển sang trạng thái đã hủy
+            if ($(this).val() === 'Đã hủy') {
+                if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) {
+                    $(this).val('<%= bill.status %>');
+                    updateStatusDisplay();
+                }
+            }
+        });
+
+        // Xử lý khi tỉnh/thành phố thay đổi
+        $('#city').on('change', function() {
+            const cityId = $(this).val();
+            const districtSelect = $('#district');
+            const wardSelect = $('#ward');
+            
+            if (cityId) {
+                districtSelect.prop('disabled', false);
+                wardSelect.prop('disabled', true);
+                wardSelect.html('<option value="">Chọn phường/xã</option>');
+                
+                // Giả lập load quận/huyện
+                showLoading();
+                setTimeout(() => {
+                    const districts = [
+                        { Id: "001", Name: "Quận 1" },
+                        { Id: "002", Name: "Quận 2" },
+                        { Id: "003", Name: "Quận 3" }
+                    ];
+                    
+                    districtSelect.html('<option value="">Chọn quận/huyện</option>');
+                    districts.forEach(district => {
+                        districtSelect.append(`<option value="${district.Id}">${district.Name}</option>`);
+                    });
+                    hideLoading();
+                }, 500);
+            } else {
+                districtSelect.prop('disabled', true);
+                wardSelect.prop('disabled', true);
+            }
+        });
+
+        // Xử lý khi quận/huyện thay đổi
+        $('#district').on('change', function() {
+            const districtId = $(this).val();
+            const wardSelect = $('#ward');
+            
+            if (districtId) {
+                wardSelect.prop('disabled', false);
+                
+                // Giả lập load phường/xã
+                showLoading();
+                setTimeout(() => {
+                    const wards = [
+                        { Id: "00001", Name: "Phường Bến Nghé" },
+                        { Id: "00002", Name: "Phường Bến Thành" },
+                        { Id: "00003", Name: "Phường Cô Giang" }
+                    ];
+                    
+                    wardSelect.html('<option value="">Chọn phường/xã</option>');
+                    wards.forEach(ward => {
+                        wardSelect.append(`<option value="${ward.Id}">${ward.Name}</option>`);
+                    });
+                    hideLoading();
+                }, 500);
+            } else {
+                wardSelect.prop('disabled', true);
+            }
+        });
+
+        // Khởi tạo
+        $(document).ready(function() {
+            // Load dữ liệu địa chỉ
+            loadAddressData();
+            
+            // Cập nhật hiển thị trạng thái ban đầu
+            updateStatusDisplay();
+            
+            // Hiệu ứng hover cho card
+            $('.card').hover(
+                function() {
+                    $(this).css('transform', 'translateY(-2px)');
+                },
+                function() {
+                    $(this).css('transform', 'translateY(0)');
+                }
+            );
+            
+            // Auto-save draft (mỗi 30 giây)
+            setInterval(saveDraft, 30000);
+        });
+
+        // Lưu bản nháp
+        function saveDraft() {
+            const formData = {
+                name: $('input[name="name"]').val(),
+                city: $('#city').val(),
+                district: $('#district').val(),
+                ward: $('#ward').val(),
+                address: $('textarea[name="address"]').val(),
+                status: $('select[name="status"]').val()
+            };
+            
+            localStorage.setItem('orderDraft_<%= bill._id %>', JSON.stringify(formData));
+        }
+
+        // Khôi phục bản nháp (nếu có)
+        function restoreDraft() {
+            const draft = localStorage.getItem('orderDraft_<%= bill._id %>');
+            if (draft) {
+                const formData = JSON.parse(draft);
+                $('input[name="name"]').val(formData.name);
+                $('#city').val(formData.city).trigger('change');
+                // Các field khác sẽ được set sau khi các select được load
+            }
+        }
+    </script>
+    
+    <% if(message && message.length > 0){ %>
+        <script>
+            toastr.success('<%= message %>','Thông báo', {timeOut: 3000, progressBar: true, closeButton: true});
+        </script>
+    <% } %>
+</body>
+</html>

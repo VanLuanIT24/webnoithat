@@ -1,0 +1,23 @@
+[{
+  "_id": {
+    "$oid": "60929cd56ce96574b4508dbf"
+  },
+  "fullNameCustomer": {
+    "firstName": "Võ Văn",
+    "lastName": "Luận"
+  },
+  "dateOfBirth": "10/04/2004",
+  "identityCardNumber": "054204006380",
+  "address": "Cẩm Lệ - Đà Nẵng",
+  "phoneNumber": "0337832953",
+  "email": "luanvo.10042004@gmail.com",
+  "loginInformation": {
+    "userName": "admin",
+    "password": "admin",
+    "type": "Admin",
+    "roles": [
+      "All"
+    ]
+  },
+  "avatar": "/uploads/user-01.png"
+}]

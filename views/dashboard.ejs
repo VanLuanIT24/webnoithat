@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/chartist-bundle/chartist.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/morris-bundle/morris.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/c3charts/c3.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- ApexCharts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0"></script>
+    
+    <!-- Title  -->
+    <title>Amado - Dashboard</title>
+
+    <!-- Favicon  -->
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --warning-color: #f8961e;
+            --info-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --sidebar-width: 250px;
+            --header-height: 70px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Circular Std', sans-serif;
+            background-color: #f5f7fb;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-main-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .nav-left-sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+        
+        .nav-left-sidebar .navbar-nav .nav-item .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 10px;
+            transition: var(--transition);
+        }
+        
+        .nav-left-sidebar .navbar-nav .nav-item .nav-link:hover,
+        .nav-left-sidebar .navbar-nav .nav-item .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        
+        .nav-left-sidebar .navbar-nav .nav-item .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-left-sidebar .submenu {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin: 5px 15px;
+        }
+        
+        .nav-left-sidebar .submenu .nav-link {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* Header */
+        .dashboard-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            height: var(--header-height);
+            background: white;
+            box-shadow: var(--shadow);
+            z-index: 999;
+            transition: var(--transition);
+        }
+        
+        .dashboard-header .navbar {
+            padding: 0 20px;
+            height: var(--header-height);
+        }
+        
+        .dashboard-header .logo-img {
+            height: 40px;
+        }
+        
+        .nav-user-img img {
+            border: 2px solid var(--primary-color);
+        }
+        
+        /* Main Content */
+        .dashboard-wrapper {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 20px;
+            width: calc(100% - var(--sidebar-width));
+            transition: var(--transition);
+        }
+        
+        .page-header {
+            margin-bottom: 25px;
+        }
+        
+        .pageheader-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        
+        .card-header h5 {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Stats Cards */
+        .stats-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        }
+        
+        .stats-card .metric-value h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stats-card .text-muted {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .stats-card .card-icon {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 2rem;
+            opacity: 0.2;
+        }
+        
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        /* Tables */
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+        }
+        
+        /* Status Badges */
+        .badge {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+        
+        .badge-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-confirmed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-shipping {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-delivered {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .badge-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Footer */
+        .footer {
+            background: white;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .nav-left-sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100vh;
+            }
+            
+            .nav-left-sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .dashboard-header {
+                left: 0;
+            }
+            
+            .dashboard-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Progress Bars */
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        /* Loading Spinner */
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Custom Toggle */
+        .custom-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .custom-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .custom-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .custom-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .custom-toggle-slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .custom-toggle-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================================== -->
+    <!-- main wrapper -->
+    <!-- ============================================================== -->
+    <div class="dashboard-main-wrapper">
+        <!-- ============================================================== -->
+        <!-- navbar -->
+        <!-- ============================================================== -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard">
+                    <img class="logo-img" src="/public/img/core-img/logo.png" alt="logo">
+                </a>
+                <button class="navbar-toggler mobile-menu-toggle" type="button">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+               <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="<%= customer.avatar %>" alt="" class="user-avatar-md rounded-circle">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %></h5>
+                                </div>
+                                <!-- Sửa link này để chuyển đến trang tài khoản -->
+                                <a class="dropdown-item" href="/admin/dashboard/account">
+                                    <i class="fas fa-user mr-2"></i>Tài khoản
+                                </a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout">
+                                    <i class="fas fa-power-off mr-2"></i>Đăng xuất
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end navbar -->
+        <!-- ============================================================== -->
+        
+        <!-- ============================================================== -->
+        <!-- left sidebar -->
+        <!-- ============================================================== -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">
+                                Menu
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1">
+                                    <i class="fa fa-fw fa-user-circle"></i>Dashboard
+                                </a>
+                                <div id="submenu-1" class="collapse submenu show">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu show">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end left sidebar -->
+        <!-- ============================================================== -->
+        
+        <!-- ============================================================== -->
+        <!-- wrapper  -->
+        <!-- ============================================================== -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content">
+                    <!-- ============================================================== -->
+                    <!-- pageheader  -->
+                    <!-- ============================================================== -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <h2 class="pageheader-title">Tổng quan</h2>
+                                <div class="page-breadcrumb">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Tổng quan</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end pageheader  -->
+                    <!-- ============================================================== -->
+                    
+                    <div class="ecommerce-widget">
+                        <!-- ============================================================== -->
+                        <!-- statistics row -->
+                        <!-- ============================================================== -->
+                        <div class="row fade-in">
+                            <!-- ============================================================== -->
+                            <!-- total revenue -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                                <div class="card stats-card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <% 
+                                                let totalRevenue = 0;
+                                                let completedOrders = abc.filter(order => order.status === "Đã giao");
+                                                completedOrders.forEach(order => {
+                                                    order.listProduct.forEach(product => {
+                                                        totalRevenue += parseInt(product.productPrice) * product.amount;
+                                                    });
+                                                });
+                                                %>
+                                                <h5 class="text-muted">Tổng doanh thu</h5>
+                                                <h2 class="mb-0 text-primary"><%= totalRevenue.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ</h2>
+                                                <small class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> 12.5% so với tháng trước
+                                                </small>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-dollar-sign"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end total revenue -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- total products -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                                <div class="card stats-card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <h5 class="text-muted">Tổng sản phẩm</h5>
+                                                <h2 class="mb-0 text-info"><%= products.length %></h2>
+                                                <small class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> 5.2% so với tháng trước
+                                                </small>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-boxes"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end total products -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- total orders -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                                <div class="card stats-card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <h5 class="text-muted">Tổng đơn hàng</h5>
+                                                <h2 class="mb-0 text-warning"><%= abc.length %></h2>
+                                                <small class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> 8.7% so với tháng trước
+                                                </small>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-shopping-cart"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end total orders -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- cancelled orders -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                                <div class="card stats-card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <% 
+                                                let cancelledOrders = abc.filter(order => order.status === "Đã hủy").length;
+                                                let cancellationRate = abc.length > 0 ? ((cancelledOrders / abc.length) * 100).toFixed(1) : 0;
+                                                %>
+                                                <h5 class="text-muted">Đơn hàng hủy</h5>
+                                                <h2 class="mb-0 text-danger"><%= cancelledOrders %></h2>
+                                                <small class="text-danger">
+                                                    Tỷ lệ hủy: <%= cancellationRate %>%
+                                                </small>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-times-circle"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end cancelled orders -->
+                            <!-- ============================================================== -->
+                        </div>
+                        
+                        <!-- ============================================================== -->
+                        <!-- charts row -->
+                        <!-- ============================================================== -->
+                        <div class="row fade-in">
+                            <!-- ============================================================== -->
+                            <!-- revenue chart -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-8 col-lg-7 col-md-12 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Doanh thu theo tháng</h5>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Năm 2023
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                <a class="dropdown-item" href="#">2023</a>
+                                                <a class="dropdown-item" href="#">2022</a>
+                                                <a class="dropdown-item" href="#">2021</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="revenueChart" class="chart-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end revenue chart -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- order status chart -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-4 col-lg-5 col-md-12 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Trạng thái đơn hàng</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="orderStatusChart" class="chart-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end order status chart -->
+                            <!-- ============================================================== -->
+                        </div>
+                        
+                        <!-- ============================================================== -->
+                        <!-- recent orders and top products -->
+                        <!-- ============================================================== -->
+                        <div class="row fade-in">
+                            <!-- ============================================================== -->
+                            <!-- recent orders -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-8 col-lg-7 col-md-12 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Đơn hàng gần đây</h5>
+                                        <a href="/admin/dashboard/pending-orders-manager" class="btn btn-sm btn-primary">Xem tất cả</a>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>Mã đơn</th>
+                                                        <th>Khách hàng</th>
+                                                        <th>Ngày đặt</th>
+                                                        <th>Số lượng</th>
+                                                        <th>Tổng tiền</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <%
+                                                    let recentOrders = abc.slice(-5).reverse();
+                                                    recentOrders.forEach((order, index) => {
+                                                        let totalAmount = 0;
+                                                        let totalItems = 0;
+                                                        order.listProduct.forEach(product => {
+                                                            totalAmount += parseInt(product.productPrice) * product.amount;
+                                                            totalItems += parseInt(product.amount);
+                                                        });
+                                                        
+                                                        let statusClass = "";
+                                                        if (order.status === "Chờ xác nhận") statusClass = "badge-pending";
+                                                        else if (order.status === "Chuẩn bị hàng") statusClass = "badge-confirmed";
+                                                        else if (order.status === "Đang giao") statusClass = "badge-shipping";
+                                                        else if (order.status === "Đã giao") statusClass = "badge-delivered";
+                                                        else if (order.status === "Đã hủy") statusClass = "badge-cancelled";
+                                                    %>
+                                                    <tr>
+                                                        <td class="font-weight-bold">#<%= order._id.toString().substring(0, 8) %></td>
+                                                        <td><%= order.displayName.firstName + " " + order.displayName.lastName %></td>
+                                                        <td><%= new Date(order.createdAt || Date.now()).toLocaleDateString('vi-VN') %></td>
+                                                        <td><%= totalItems %></td>
+                                                        <td><%= totalAmount.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ</td>
+                                                        <td><span class="badge <%= statusClass %>"><%= order.status %></span></td>
+                                                        <td>
+                                                            <a href="/admin/dashboard/orders-manager/detail/<%= order._id %>" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                    <% }); %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end recent orders -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- top products -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-4 col-lg-5 col-md-12 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Sản phẩm bán chạy</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Bàn kính Ikea Vittsjo</span>
+                                                <span class="font-weight-bold">968</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 85%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Bàn xếp Ikea Vittsjo</span>
+                                                <span class="font-weight-bold">863</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Ghế đôn Ikea Vittsjo</span>
+                                                <span class="font-weight-bold">576</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 60%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Giường ngủ Ikea Delakting</span>
+                                                <span class="font-weight-bold">329</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 45%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span>Đèn trần Ikea PS-2014</span>
+                                                <span class="font-weight-bold">289</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 40%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end top products -->
+                            <!-- ============================================================== -->
+                        </div>
+                        
+                        <!-- ============================================================== -->
+                        <!-- additional statistics -->
+                        <!-- ============================================================== -->
+                        <div class="row fade-in">
+                            <!-- ============================================================== -->
+                            <!-- customer statistics -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Thống kê khách hàng</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="bg-primary rounded-circle p-3 mr-3">
+                                                <i class="fas fa-users text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="mb-0">1,248</h4>
+                                                <p class="text-muted mb-0">Tổng khách hàng</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center">
+                                            <div class="col-6 border-right">
+                                                <h5 class="mb-0">64%</h5>
+                                                <small class="text-muted">Khách hàng mới</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 class="mb-0">36%</h5>
+                                                <small class="text-muted">Khách hàng cũ</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end customer statistics -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- inventory status -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Tình trạng tồn kho</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="bg-warning rounded-circle p-3 mr-3">
+                                                <i class="fas fa-box-open text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="mb-0">42</h4>
+                                                <p class="text-muted mb-0">Sản phẩm sắp hết</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center">
+                                            <div class="col-6 border-right">
+                                                <h5 class="mb-0">92%</h5>
+                                                <small class="text-muted">Tỷ lệ có sẵn</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 class="mb-0">8%</h5>
+                                                <small class="text-muted">Sắp hết hàng</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end inventory status -->
+                            <!-- ============================================================== -->
+                            
+                            <!-- ============================================================== -->
+                            <!-- performance metrics -->
+                            <!-- ============================================================== -->
+                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Chỉ số hiệu suất</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="bg-success rounded-circle p-3 mr-3">
+                                                <i class="fas fa-chart-line text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="mb-0">87%</h4>
+                                                <p class="text-muted mb-0">Hiệu suất tổng thể</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center">
+                                            <div class="col-6 border-right">
+                                                <h5 class="mb-0">2.4</h5>
+                                                <small class="text-muted">Thời gian xử lý (ngày)</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 class="mb-0">94%</h5>
+                                                <small class="text-muted">Tỷ lệ hoàn thành</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ============================================================== -->
+                            <!-- end performance metrics -->
+                            <!-- ============================================================== -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ============================================================== -->
+            <!-- footer -->
+            <!-- ============================================================== -->
+            <div class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            Copyright © 2023 Amado. All rights reserved. Dashboard by <a href="#">VanLuanIT2004</a>.
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            <div class="text-md-right footer-links d-none d-sm-block">
+                                <a href="javascript: void(0);">Về cửa hàng</a>
+                                <a href="javascript: void(0);">Ủng hộ</a>
+                                <a href="javascript: void(0);">Liên hệ với chúng tôi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- end footer -->
+            <!-- ============================================================== -->
+        </div>
+        <!-- ============================================================== -->
+        <!-- end wrapper  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- end main wrapper  -->
+    <!-- ============================================================== -->
+    
+    <!-- Optional JavaScript -->
+    <!-- jquery 3.3.1 -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <!-- bootstap bundle js -->
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <!-- slimscroll js -->
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <!-- main js -->
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <!-- chart chartist js -->
+    <script src="/public/assets/vendor/charts/chartist-bundle/chartist.min.js"></script>
+    <!-- sparkline js -->
+    <script src="/public/assets/vendor/charts/sparkline/jquery.sparkline.js"></script>
+    <!-- morris js -->
+    <!-- <script src="/public/assets/vendor/charts/morris-bundle/raphael.min.js"></script>
+    <script src="/public/assets/vendor/charts/morris-bundle/morris.js"></script> -->
+    <!-- chart c3 js -->
+    <script src="/public/assets/vendor/charts/c3charts/c3.min.js"></script>
+    <script src="/public/assets/vendor/charts/c3charts/d3-5.4.0.min.js"></script>
+    <script src="/public/assets/vendor/charts/c3charts/C3chartjs.js"></script>
+    <script src="/public/assets/libs/js/dashboard-ecommerce.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        // Initialize ApexCharts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Revenue Chart
+            var revenueChartOptions = {
+                series: [{
+                    name: 'Doanh thu',
+                    data: [45000000, 52000000, 48000000, 62000000, 75000000, 82000000, 78000000, 90000000, 85000000, 92000000, 98000000, 105000000]
+                }],
+                chart: {
+                    height: 350,
+                    type: 'area',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                colors: ['#4361ee'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.3,
+                        stops: [0, 90, 100]
+                    }
+                },
+                xaxis: {
+                    categories: ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12']
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function(value) {
+                            return (value / 1000000).toFixed(0) + ' tr';
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' đ';
+                        }
+                    }
+                }
+            };
+
+            var revenueChart = new ApexCharts(document.querySelector("#revenueChart"), revenueChartOptions);
+            revenueChart.render();
+
+            // Order Status Chart
+            var orderStatusChartOptions = {
+                series: [44, 25, 15, 10, 6],
+                chart: {
+                    height: 300,
+                    type: 'donut',
+                },
+                colors: ['#4cc9f0', '#4895ef', '#4361ee', '#3f37c9', '#f72585'],
+                labels: ['Đã giao', 'Đang giao', 'Chuẩn bị', 'Chờ xác nhận', 'Đã hủy'],
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            width: 200
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }],
+                legend: {
+                    position: 'bottom'
+                }
+            };
+
+            var orderStatusChart = new ApexCharts(document.querySelector("#orderStatusChart"), orderStatusChartOptions);
+            orderStatusChart.render();
+
+            // Mobile menu toggle
+            $('.mobile-menu-toggle').on('click', function() {
+                $('.nav-left-sidebar').toggleClass('active');
+            });
+
+            // Animation on scroll
+            function animateOnScroll() {
+                const elements = document.querySelectorAll('.fade-in');
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.style.opacity = "1";
+                        element.style.transform = "translateY(0)";
+                    }
+                });
+            }
+
+            // Set initial state for fade-in elements
+            document.querySelectorAll('.fade-in').forEach(el => {
+                el.style.opacity = "0";
+                el.style.transform = "translateY(20px)";
+                el.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+            });
+
+            // Run on load and scroll
+            window.addEventListener('load', animateOnScroll);
+            window.addEventListener('scroll', animateOnScroll);
+        });
+    </script>
+    
+    <% if(message && message.length > 0){ %>
+        <script>
+            toastr.success('<%= message %>','Thông báo', {timeOut: 1500, progressBar: true, closeButton: true});
+        </script>
+    <% } %>
+</body>
+
+</html>

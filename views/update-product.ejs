@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+  <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+  <link rel="icon" href="/public/img/core-img/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <title>Chỉnh sửa sản phẩm - Amado Admin</title>
+  <style>
+    :root {
+      --primary-color: #4e73df;
+      --success-color: #1cc88a;
+      --danger-color: #e74a3b;
+      --warning-color: #f6c23e;
+    }
+    
+    .img-preview { 
+      width: 120px; 
+      height: 120px; 
+      object-fit: cover;
+      margin-right: 10px; 
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .img-preview:hover {
+      transform: scale(1.05);
+    }
+    
+    .thumbs { 
+      display: flex; 
+      margin-top: 15px; 
+      flex-wrap: wrap; 
+    }
+    
+    .form-section {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .section-title i {
+      margin-right: 8px;
+    }
+    
+    .required-label::after {
+      content: " *";
+      color: var(--danger-color);
+    }
+    
+    .preview-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger-color);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+    
+    .existing-thumb {
+      position: relative;
+      margin-right: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .existing-thumb .remove-checkbox {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      z-index: 1;
+      opacity: 0;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+    
+    .existing-thumb .remove-checkbox + .remove-image {
+      pointer-events: none;
+    }
+    
+    .existing-thumb .remove-checkbox:checked + .remove-image {
+      background: var(--success-color);
+    }
+    
+    .existing-thumb .remove-checkbox:checked + .remove-image i::before {
+      content: "\f00c";
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .custom-file-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 15px;
+      background-color: #f8f9fc;
+      border: 2px dashed #d1d3e2;
+      border-radius: 5px;
+      color: #6e707e;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-align: center;
+      position: relative;
+    }
+    
+    .custom-file-btn:hover {
+      background-color: #eaecf4;
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .custom-file-btn.dragover {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+    
+    .form-control:focus, .custom-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+      background-color: #2e59d9;
+      border-color: #2e59d9;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      color: var(--danger-color);
+      font-size: 0.875rem;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .form-control.error {
+      border-color: var(--danger-color);
+    }
+    
+    .character-count {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-align: right;
+      margin-top: 5px;
+    }
+    
+    .image-count-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    
+    .card-header {
+      background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%);
+      border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .image-section {
+      background-color: #f8f9fc;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .image-section-title {
+      font-weight: 600;
+      color: #5a5c69;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .image-section-title i {
+      margin-right: 8px;
+      color: var(--primary-color);
+    }
+    
+    .alert-area {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 300px;
+    }
+    
+    .discount-section {
+      background-color: #fff8e1;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .rating-section {
+      background-color: #e8f5e9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- Alert Area for Flash Messages -->
+  <div class="alert-area" id="alertArea"></div>
+  
+  <div class="container mt-4">
+    <div class="card shadow">
+      <div class="card-header py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-edit text-primary mr-2"></i>
+            Chỉnh sửa sản phẩm: <%= product.productName %>
+          </h5>
+          <a class="btn btn-sm btn-outline-secondary" href="/admin/dashboard/products-manager">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="editProductForm" action="/admin/dashboard/products-manager/update/<%= product._id %>" method="POST" enctype="multipart/form-data">
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-info-circle"></i> Thông tin cơ bản
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-8">
+                <label for="productName" class="required-label">Tên sản phẩm</label>
+                <input required name="productname" type="text" class="form-control" id="productName" 
+                       placeholder="Nhập tên sản phẩm" value="<%= product.productName || '' %>">
+                <div class="error-message" id="productNameError">Vui lòng nhập tên sản phẩm</div>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="price" class="required-label">Đơn giá</label>
+                <div class="input-group">
+                  <input required name="price" type="number" min="0" class="form-control" id="price" 
+                         placeholder="Giá sản phẩm" value="<%= product.description && product.description.price ? product.description.price : '' %>">
+                  <div class="input-group-append">
+                    <span class="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+                <div class="error-message" id="priceError">Vui lòng nhập giá hợp lệ</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="description" class="required-label">Mô tả sản phẩm</label>
+              <textarea required name="description" id="description" class="form-control" rows="4" 
+                        placeholder="Mô tả chi tiết về sản phẩm" maxlength="500"><%= product.description && product.description.productDescription ? product.description.productDescription : '' %></textarea>
+              <div class="character-count">
+                <span id="charCount"><%= product.description && product.description.productDescription ? product.description.productDescription.length : 0 %></span>/500 ký tự
+              </div>
+              <div class="error-message" id="descriptionError">Vui lòng nhập mô tả sản phẩm</div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-tags"></i> Phân loại sản phẩm
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="categories" class="required-label">Danh mục</label>
+                <select required id="categories" name="categories" class="form-control custom-select">
+                  <option value="">-- Chọn danh mục --</option>
+                  <% if(types && types.length){ types.forEach(t => { %>
+                    <option value="<%= t._id %>" 
+                      <%= (product.description && product.description.typeCode && product.description.typeCode.toString() === t._id.toString()) ? 'selected' : '' %>>
+                      <%= t.typeName %>
+                    </option>
+                  <% }) } %>
+                </select>
+                <div class="error-message" id="categoriesError">Vui lòng chọn danh mục</div>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="supplier" class="required-label">Nhà cung cấp</label>
+                <select required id="supplier" name="supplier" class="form-control custom-select">
+                  <option value="">-- Chọn nhà cung cấp --</option>
+                  <% if(suppliers && suppliers.length){ suppliers.forEach(s => { %>
+                    <option value="<%= s._id %>" 
+                      <%= (product.description && product.description.supplierCode && product.description.supplierCode.toString() === s._id.toString()) ? 'selected' : '' %>>
+                      <%= s.supplierName %>
+                    </option>
+                  <% }) } %>
+                </select>
+                <div class="error-message" id="supplierError">Vui lòng chọn nhà cung cấp</div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="unit" class="required-label">Đơn vị tính</label>
+                <input required name="unit" id="unit" class="form-control" placeholder="VD: cái, bộ, chiếc" 
+                       value="<%= product.description && product.description.unit ? product.description.unit : 'Cái' %>">
+                <div class="error-message" id="unitError">Vui lòng nhập đơn vị tính</div>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="stock" class="required-label">Số lượng tồn kho</label>
+                <input required name="stock" type="number" min="0" id="stock" class="form-control" 
+                       value="<%= product.description && product.description.stock ? product.description.stock : 0 %>">
+                <div class="error-message" id="stockError">Vui lòng nhập số lượng tồn kho</div>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="status">Trạng thái</label>
+                <select id="status" name="status" class="form-control custom-select">
+                  <option value="true" <%= (product.description && product.description.status === true) ? 'selected' : '' %>>Hiển thị</option>
+                  <option value="false" <%= (product.description && product.description.status === false) ? 'selected' : '' %>>Ẩn</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="featured" name="featured" 
+                         <%= (product.description && product.description.featured) ? 'checked' : '' %>>
+                  <label class="custom-control-label" for="featured">Sản phẩm nổi bật</label>
+                </div>
+              </div>
+              <div class="form-group col-md-6">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="inStock" name="inStock" 
+                         <%= (product.description && product.description.inStock !== false) ? 'checked' : '' %>>
+                  <label class="custom-control-label" for="inStock">Còn hàng</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-percentage"></i> Thông tin giảm giá
+            </div>
+            
+            <div class="discount-section">
+              <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label for="discountType">Loại giảm giá</label>
+                  <select id="discountType" name="discountType" class="form-control custom-select">
+                    <option value="">-- Không giảm giá --</option>
+                    <option value="percentage" <%= (product.discount && product.discount.type === 'percentage') ? 'selected' : '' %>>Theo phần trăm</option>
+                    <option value="fixed" <%= (product.discount && product.discount.type === 'fixed') ? 'selected' : '' %>>Theo số tiền cố định</option>
+                  </select>
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="discountValue">Giá trị giảm</label>
+                  <div class="input-group">
+                    <input name="discountValue" type="number" min="0" class="form-control" id="discountValue" 
+                           value="<%= product.discount && product.discount.value ? product.discount.value : '' %>">
+                    <div class="input-group-append">
+                      <span class="input-group-text" id="discountUnit">
+                        <%= (product.discount && product.discount.type === 'percentage') ? '%' : 'VNĐ' %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="discountEndDate">Ngày kết thúc</label>
+                  <input name="discountEndDate" type="date" class="form-control" id="discountEndDate" 
+                         value="<%= product.discount && product.discount.endDate ? new Date(product.discount.endDate).toISOString().split('T')[0] : '' %>">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-star"></i> Thông tin đánh giá
+            </div>
+            
+            <div class="rating-section">
+              <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label for="averageRating">Điểm đánh giá trung bình</label>
+                  <input name="averageRating" type="number" min="0" max="5" step="0.1" class="form-control" id="averageRating" 
+                         value="<%= product.rating && product.rating.average ? product.rating.average : 0 %>">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="reviewCount">Số lượt đánh giá</label>
+                  <input name="reviewCount" type="number" min="0" class="form-control" id="reviewCount" 
+                         value="<%= product.rating && product.rating.count ? product.rating.count : 0 %>">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="ratingDistribution">Phân phối đánh giá</label>
+                  <input name="ratingDistribution" type="text" class="form-control" id="ratingDistribution" 
+                         placeholder="VD: 5,4,3,2,1" value="<%= product.rating && product.rating.distribution ? product.rating.distribution.join(',') : '' %>">
+                  <small class="form-text text-muted">Nhập số lượng đánh giá cho mỗi sao từ 5 đến 1, cách nhau bằng dấu phẩy</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-images"></i> Hình ảnh sản phẩm
+            </div>
+            
+            <!-- Existing Images -->
+            <div class="image-section">
+              <div class="image-section-title">
+                <i class="fas fa-images"></i> Ảnh hiện tại
+                <span class="badge badge-primary ml-2" id="existingImageCount">
+                  <%= (product.description && (product.description.imageList || product.description.images || product.description.imagelist)) ? (product.description.imageList || product.description.images || product.description.imagelist).length : 0 %>
+                </span>
+              </div>
+              
+              <div id="existingPreviews" class="thumbs">
+                <% 
+                  // Try common keys for existing images
+                  const existingImages = (product.description && (product.description.imageList || product.description.images || product.description.imagelist)) || [];
+                  
+                  if(existingImages && existingImages.length > 0){ 
+                    existingImages.forEach(function(img, idx){ 
+                %>
+                  <div class="existing-thumb">
+                    <div class="preview-container">
+                      <input type="checkbox" class="remove-checkbox" name="removeImages[]" value="<%= img %>" 
+                             id="removeImage<%= idx %>">
+                      <label for="removeImage<%= idx %>" class="remove-image" title="Click để đánh dấu xóa">
+                        <i class="fas fa-times"></i>
+                      </label>
+                      <img src="<%= img %>" class="img-preview img-thumbnail" alt="Ảnh sản phẩm <%= idx + 1 %>" 
+                           onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNGM0YzRjMiLz48cGF0aCBkPSJNNjAgNDBDNjUuNTIyOCA0MCA3MCA0NC40NzcyIDcwIDUwQzcwIDU1LjUyMjggNjUuNTIyOCA2MCA2MCA2MEM1NC40NzcyIDYwIDUwIDU1LjUyMjggNTAgNTBDNTAgNDQuNDc3MiA1NC40NzcyIDQwIDYwIDQwWk02MCA2NkM3Mi4xNTA3IDY2IDgyIDcxLjYzNDQgODIgNzhWODJIMzhWNzhDMzggNzEuNjM0NCA0Ny44NDkzIDY2IDYwIDY2WiIgZmlsbD0iIzk5OTk5OSIvPjwvc3ZnPg=='">
+                    </div>
+                  </div>
+                <% 
+                    });
+                  } else { 
+                %>
+                  <div class="text-muted w-100 text-center py-3">
+                    <i class="fas fa-image fa-2x mb-2 d-block"></i>
+                    Chưa có ảnh sản phẩm
+                  </div>
+                <% } %>
+              </div>
+              
+              <small class="form-text text-muted">
+                <i class="fas fa-info-circle mr-1"></i>
+                Click vào biểu tượng <i class="fas fa-times text-danger"></i> để đánh dấu xóa ảnh (biểu tượng sẽ chuyển thành <i class="fas fa-check text-success"></i> khi đã chọn)
+              </small>
+            </div>
+
+            <!-- New Images Upload -->
+            <div class="image-section">
+              <div class="image-section-title">
+                <i class="fas fa-cloud-upload-alt"></i> Thêm ảnh mới
+                <span class="badge badge-success ml-2" id="newImageCount">0</span>
+              </div>
+              
+              <div class="form-group">
+                <div class="file-input-wrapper">
+                  <div class="custom-file-btn p-4" id="customFileBtn">
+                    <div class="text-center">
+                      <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                      <p class="mb-1">Kéo thả hình ảnh vào đây hoặc click để chọn</p>
+                      <small class="text-muted">Hỗ trợ: JPG, PNG, GIF (Tối đa 4 ảnh)</small>
+                      <div class="image-count-badge" id="imageCountBadge">0</div>
+                    </div>
+                    <input accept="image/*" multiple name="imagelist" id="imagelist" type="file" class="form-control-file">
+                  </div>
+                </div>
+                <div class="error-message" id="imageError"></div>
+              </div>
+              
+              <div id="newPreviews" class="thumbs"></div>
+            </div>
+          </div>
+
+          <div class="form-row mt-4">
+            <div class="form-group col-md-12 text-right">
+              <button type="button" id="resetBtn" class="btn btn-outline-secondary mr-2">
+                <i class="fas fa-redo mr-1"></i> Đặt lại
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-1"></i> Cập nhật sản phẩm
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+  <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Biến lưu trữ các file mới được chọn
+      let selectedFiles = [];
+      
+      // Đếm ký tự trong textarea
+      $('#description').on('input', function() {
+        const count = $(this).val().length;
+        $('#charCount').text(count);
+      });
+      
+      // Xử lý khi thay đổi loại giảm giá
+      $('#discountType').on('change', function() {
+        const type = $(this).val();
+        const unitSpan = $('#discountUnit');
+        
+        if (type === 'percentage') {
+          unitSpan.text('%');
+          $('#discountValue').attr('max', '100');
+        } else if (type === 'fixed') {
+          unitSpan.text('VNĐ');
+          $('#discountValue').removeAttr('max');
+        } else {
+          unitSpan.text('');
+        }
+      });
+      
+      // Xử lý khi chọn file mới
+      $('#imagelist').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        handleNewFiles(files);
+      });
+      
+      function handleNewFiles(files) {
+        // Kiểm tra tổng số ảnh (cũ + mới)
+        const existingCount = $('.existing-thumb').length;
+        const removeCount = $('.remove-checkbox:checked').length;
+        const currentCount = existingCount - removeCount;
+        
+        if (currentCount + files.length > 4) {
+          showError('imageError', `Tổng số ảnh không được vượt quá 4. Hiện có ${currentCount} ảnh sẽ được giữ lại.`);
+          return;
+        }
+        
+        // Kiểm tra loại file
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+        
+        if (invalidFiles.length > 0) {
+          showError('imageError', 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF)');
+          return;
+        }
+        
+        // Reset lỗi
+        hideError('imageError');
+        
+        // Cập nhật danh sách file
+        selectedFiles = files;
+        
+        // Cập nhật badge
+        updateImageCountBadge();
+        
+        // Hiển thị preview
+        displayNewImagePreviews(files);
+      }
+      
+      // Hiển thị preview ảnh mới
+      function displayNewImagePreviews(files) {
+        const previews = $('#newPreviews');
+        previews.empty();
+        
+        files.forEach((file, index) => {
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+            const previewContainer = $('<div class="preview-container"></div>');
+            const img = $('<img>').attr('src', e.target.result).addClass('img-preview');
+            const removeBtn = $('<div class="remove-image"><i class="fas fa-times"></i></div>');
+            
+            removeBtn.on('click', function() {
+              // Xóa file khỏi danh sách
+              selectedFiles.splice(index, 1);
+              
+              // Cập nhật input file
+              updateFileInput();
+              
+              // Cập nhật badge
+              updateImageCountBadge();
+              
+              // Cập nhật preview
+              displayNewImagePreviews(selectedFiles);
+            });
+            
+            previewContainer.append(img).append(removeBtn);
+            previews.append(previewContainer);
+          };
+          
+          reader.readAsDataURL(file);
+        });
+        
+        // Cập nhật số lượng ảnh mới
+        $('#newImageCount').text(files.length);
+      }
+      
+      // Cập nhật input file với các file đã chọn
+      function updateFileInput() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        $('#imagelist')[0].files = dt.files;
+      }
+      
+      // Cập nhật badge đếm ảnh
+      function updateImageCountBadge() {
+        const existingCount = $('.existing-thumb').length;
+        const removeCount = $('.remove-checkbox:checked').length;
+        const currentCount = existingCount - removeCount;
+        const newCount = selectedFiles.length;
+        const totalCount = currentCount + newCount;
+        
+        $('#imageCountBadge').text(totalCount);
+        
+        // Đổi màu badge nếu vượt quá giới hạn
+        if (totalCount > 4) {
+          $('#imageCountBadge').css('background-color', 'var(--danger-color)');
+        } else {
+          $('#imageCountBadge').css('background-color', 'var(--primary-color)');
+        }
+        
+        // Cập nhật số lượng ảnh hiện có (sau khi trừ đi ảnh bị xóa)
+        $('#existingImageCount').text(currentCount);
+      }
+      
+      // Kéo thả file
+      const fileInputWrapper = $('#customFileBtn');
+      
+      fileInputWrapper.on('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('dragover');
+      });
+      
+      fileInputWrapper.on('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+      });
+      
+      fileInputWrapper.on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        handleNewFiles(Array.from(files));
+      });
+      
+      // Xử lý khi đánh dấu xóa ảnh cũ
+      $('.remove-checkbox').on('change', function() {
+        updateImageCountBadge();
+      });
+      
+      // Validate form
+      $('#editProductForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Reset lỗi
+        $('.error-message').hide();
+        $('.form-control').removeClass('error');
+        
+        let isValid = true;
+        
+        // Kiểm tra tên sản phẩm
+        if (!$('#productName').val().trim()) {
+          showError('productNameError', 'Vui lòng nhập tên sản phẩm');
+          isValid = false;
+        }
+        
+        // Kiểm tra giá
+        if (!$('#price').val() || $('#price').val() < 0) {
+          showError('priceError', 'Vui lòng nhập giá hợp lệ');
+          isValid = false;
+        }
+        
+        // Kiểm tra mô tả
+        if (!$('#description').val().trim()) {
+          showError('descriptionError', 'Vui lòng nhập mô tả sản phẩm');
+          isValid = false;
+        }
+        
+        // Kiểm tra danh mục
+        if (!$('#categories').val()) {
+          showError('categoriesError', 'Vui lòng chọn danh mục');
+          isValid = false;
+        }
+        
+        // Kiểm tra nhà cung cấp
+        if (!$('#supplier').val()) {
+          showError('supplierError', 'Vui lòng chọn nhà cung cấp');
+          isValid = false;
+        }
+        
+        // Kiểm tra đơn vị tính
+        if (!$('#unit').val().trim()) {
+          showError('unitError', 'Vui lòng nhập đơn vị tính');
+          isValid = false;
+        }
+        
+        // Kiểm tra số lượng tồn kho
+        if (!$('#stock').val() || $('#stock').val() < 0) {
+          showError('stockError', 'Vui lòng nhập số lượng tồn kho hợp lệ');
+          isValid = false;
+        }
+        
+        // Kiểm tra tổng số ảnh
+        const existingCount = $('.existing-thumb').length;
+        const removeCount = $('.remove-checkbox:checked').length;
+        const currentCount = existingCount - removeCount;
+        const newCount = selectedFiles.length;
+        const totalCount = currentCount + newCount;
+        
+        if (totalCount === 0) {
+          showError('imageError', 'Sản phẩm phải có ít nhất một hình ảnh');
+          isValid = false;
+        }
+        
+        if (totalCount > 4) {
+          showError('imageError', 'Tổng số ảnh không được vượt quá 4');
+          isValid = false;
+        }
+        
+        // Kiểm tra giảm giá nếu có
+        const discountType = $('#discountType').val();
+        const discountValue = $('#discountValue').val();
+        
+        if (discountType && (!discountValue || discountValue < 0)) {
+          showError('discountValue', 'Vui lòng nhập giá trị giảm giá hợp lệ');
+          isValid = false;
+        }
+        
+        if (discountType === 'percentage' && discountValue > 100) {
+          showError('discountValue', 'Giảm giá theo phần trăm không được vượt quá 100%');
+          isValid = false;
+        }
+        
+        if (isValid) {
+          // Hiển thị loading
+          $('#loadingOverlay').show();
+          
+          // Gửi form
+          this.submit();
+        }
+      });
+      
+      // Nút reset
+      $('#resetBtn').on('click', function() {
+        if (confirm('Bạn có chắc muốn đặt lại tất cả thông tin? Các thay đổi chưa lưu sẽ bị mất.')) {
+          // Reset form về giá trị ban đầu
+          $('#editProductForm')[0].reset();
+          
+          // Reset ảnh mới
+          selectedFiles = [];
+          $('#newPreviews').empty();
+          $('#imagelist').val('');
+          updateFileInput();
+          updateImageCountBadge();
+          
+          // Bỏ chọn tất cả ảnh để xóa
+          $('.remove-checkbox').prop('checked', false).trigger('change');
+          
+          // Reset lỗi
+          $('.error-message').hide();
+          $('.form-control').removeClass('error');
+          $('#charCount').text('<%= product.description && product.description.productDescription ? product.description.productDescription.length : 0 %>');
+          
+          // Reset đơn vị giảm giá
+          $('#discountUnit').text("<%= (product.discount && product.discount.type === 'percentage') ? '%' : 'VNĐ' %>");
+        }
+      });
+      
+      // Hiển thị lỗi
+      function showError(elementId, message) {
+        $('#' + elementId).text(message).show();
+        const inputElement = $('#' + elementId).prev();
+        if (inputElement.hasClass('form-control') || inputElement.hasClass('custom-select')) {
+          inputElement.addClass('error');
+        }
+      }
+      
+      // Ẩn lỗi
+      function hideError(elementId) {
+        $('#' + elementId).hide();
+        const inputElement = $('#' + elementId).prev();
+        if (inputElement.hasClass('form-control') || inputElement.hasClass('custom-select')) {
+          inputElement.removeClass('error');
+        }
+      }
+      
+      // Khởi tạo badge đếm ảnh
+      updateImageCountBadge();
+      
+      // Tự động ẩn loading sau 10s (phòng trường hợp có lỗi)
+      setTimeout(function() {
+        $('#loadingOverlay').hide();
+      }, 10000);
+      
+      // Hiển thị flash message nếu có
+      const urlParams = new URLSearchParams(window.location.search);
+      const message = urlParams.get('message');
+      if (message) {
+        showAlert(message, 'success');
+      }
+    });
+    
+    // Hàm hiển thị alert
+    function showAlert(message, type = 'info') {
+      const alertArea = $('#alertArea');
+      const alert = $(`
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      `);
+      alertArea.append(alert);
+      
+      // Tự động ẩn sau 5 giây
+      setTimeout(() => {
+        alert.alert('close');
+      }, 5000);
+    }
+  </script>
+
+  <!-- Sửa lỗi ReferenceError: message is not defined -->
+  <% if(typeof message !== 'undefined' && message){ %>
+    <script>
+      $(document).ready(function() {
+        showAlert('<%= message %>', 'success');
+      });
+    </script>
+  <% } %>
+</body>
+</html>

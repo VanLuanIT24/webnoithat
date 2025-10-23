@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <title>Cập nhật người dùng - Amado</title>
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+</head>
+
+<body>
+    <div class="dashboard-main-wrapper">
+        <!-- Navbar -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard"><img class="logo-img" src="/public/img/core-img/logo.png" alt="logo"></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse " id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<%= customer.avatar %>" alt="" class="user-avatar-md rounded-circle"></a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% let fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName; %>
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %></h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Account</a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout"><i class="fas fa-power-off mr-2"></i>Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">Menu</li>
+                            <li class="nav-item ">
+                                <a class="nav-link active" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1"><i class="fa fa-fw fa-user-circle"></i>Dashboard</a>
+                                <div id="submenu-1" class="collapse submenu show">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu show">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="dashboard-wrapper">
+            <div class="container-fluid dashboard-content">
+                <!-- Page Header -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Cập nhật thông tin người dùng</h2>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard/users-manager" class="breadcrumb-link">Quản lý người dùng</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Cập nhật người dùng</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hiển thị thông báo -->
+                <% if(message && message.length > 0){ %>
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <%= message %>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                <% } %>
+
+                <!-- Update Form -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            <h5 class="card-header">Thông tin người dùng</h5>
+                            <div class="card-body">
+                                <form action="/admin/dashboard/users-manager/update/<%= user._id %>?__method=PUT" method="POST" enctype="multipart/form-data">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="firstname">Họ *</label>
+                                                <input type="text" class="form-control" id="firstname" name="firstname" 
+                                                       value="<%= user.fullNameCustomer.firstName %>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="lastname">Tên *</label>
+                                                <input type="text" class="form-control" id="lastname" name="lastname" 
+                                                       value="<%= user.fullNameCustomer.lastName %>" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="email">Email *</label>
+                                                <input type="email" class="form-control" id="email" name="email" 
+                                                       value="<%= user.email %>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="phoneNumber">Số điện thoại *</label>
+                                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                                       value="<%= user.phoneNumber %>" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="identityCardNumber">CMND/CCCD</label>
+                                                <input type="text" class="form-control" id="identityCardNumber" name="identityCardNumber" 
+                                                       value="<%= user.identityCardNumber || '' %>">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="dateOfBirth">Ngày sinh</label>
+                                                <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth" 
+                                                       value="<%= user.dateOfBirth || '' %>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="sex">Giới tính</label>
+                                                <select class="form-control" id="sex" name="sex">
+                                                    <option value="">Chọn giới tính</option>
+                                                    <option value="Nam" <%= user.sex === 'Nam' ? 'selected' : '' %>>Nam</option>
+                                                    <option value="Nữ" <%= user.sex === 'Nữ' ? 'selected' : '' %>>Nữ</option>
+                                                    <option value="Khác" <%= user.sex === 'Khác' ? 'selected' : '' %>>Khác</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="avatar">Avatar</label>
+                                                <input type="file" class="form-control-file" id="avatar" name="avatar" accept="image/*">
+                                                <% if(user.avatar) { %>
+                                                    <small class="form-text text-muted">
+                                                        Avatar hiện tại: <img src="<%= user.avatar %>" alt="Avatar" width="50" height="50" class="rounded-circle ml-2">
+                                                    </small>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="address">Địa chỉ</label>
+                                        <textarea class="form-control" id="address" name="address" rows="3"><%= user.address || '' %></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="password">Mật khẩu mới (để trống nếu không đổi)</label>
+                                        <input type="password" class="form-control" id="password" name="password" placeholder="Nhập mật khẩu mới">
+                                        <small class="form-text text-muted">Chỉ nhập nếu muốn thay đổi mật khẩu</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                                        <a href="/admin/dashboard/users-manager" class="btn btn-secondary">Hủy</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/chartist-bundle/chartist.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/morris-bundle/morris.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/public/assets/vendor/charts/c3charts/c3.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Title  -->
+    <title>Amado - Quản lý sản phẩm</title>
+
+    <!-- Favicon  -->
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+            --info-color: #36b9cc;
+        }
+        
+        .header-product {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .header-product .button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.35rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header-product .button:hover {
+            background-color: #2e59d9;
+            transform: translateY(-1px);
+            box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.15);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .table-responsive {
+            border-radius: 0.35rem;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 1rem 0.75rem;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .table tbody td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            border-color: #e3e6f0;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fc;
+            transform: translateY(-1px);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .status-badge {
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background-color: rgba(28, 200, 138, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-inactive {
+            background-color: rgba(231, 74, 59, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-buttons a {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn-edit {
+            background-color: rgba(54, 185, 204, 0.1);
+            color: var(--info-color);
+        }
+        
+        .btn-edit:hover {
+            background-color: var(--info-color);
+            color: white;
+        }
+        
+        .btn-delete {
+            background-color: rgba(231, 74, 59, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .btn-delete:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-toggle {
+            background-color: rgba(246, 194, 62, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .btn-toggle:hover {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .pagination .page-link {
+            color: var(--primary-color);
+            border: 1px solid #e3e6f0;
+            padding: 0.5rem 0.75rem;
+        }
+        
+        .pagination .page-link:hover {
+            background-color: #eaecf4;
+            border-color: #d1d3e2;
+        }
+        
+        .product-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 0.35rem;
+            margin-right: 0.5rem;
+        }
+        
+        .product-name-cell {
+            display: flex;
+            align-items: center;
+        }
+        
+        .stock-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .stock-low {
+            background-color: rgba(231, 74, 59, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stock-medium {
+            background-color: rgba(246, 194, 62, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stock-high {
+            background-color: rgba(28, 200, 138, 0.1);
+            color: var(--success-color);
+        }
+        
+        .card {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border: 1px solid #e3e6f0;
+        }
+        
+        .page-header {
+            border-bottom: 1px solid #e3e6f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box {
+            max-width: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .action-buttons a {
+                width: 28px;
+                height: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================================== -->
+    <!-- main wrapper -->
+    <!-- ============================================================== -->
+    <div class="dashboard-main-wrapper">
+        <!-- ============================================================== -->
+        <!-- navbar -->
+        <!-- ============================================================== -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard"><img class="logo-img" src="/public/img/core-img/logo.png" alt="logo"></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse " id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<%= customer.avatar %> " alt="" class="user-avatar-md rounded-circle"></a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %> </h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Account</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-power-off mr-2"></i>Logout</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end navbar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- left sidebar -->
+        <!-- ============================================================== -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">
+                                Menu
+                            </li>
+                            <li class="nav-item ">
+                                <a class="nav-link active" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1"><i class="fa fa-fw fa-user-circle"></i>Dashboard <span class="badge badge-success">6</span></a>
+                                <div id="submenu-1" class="collapse submenu show">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu show">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end left sidebar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- wrapper  -->
+        <!-- ============================================================== -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <!-- ============================================================== -->
+                    <!-- pageheader  -->
+                    <!-- ============================================================== -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h2 class="pageheader-title">Quản lý sản phẩm</h2>
+                                        <div class="page-breadcrumb">
+                                            <nav aria-label="breadcrumb">
+                                                <ol class="breadcrumb">
+                                                    <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Dashboard</a></li>
+                                                    <li class="breadcrumb-item active" aria-current="page">Quản lý sản phẩm</li>
+                                                </ol>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                    <div class="search-box">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="button">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end pageheader  -->
+                    <!-- ============================================================== -->
+                    <div class="ecommerce-widget">
+                        <!-- product manager  -->
+                        <!-- ============================================================== -->
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <div class="header-product">
+                                    <h5 class="card-header mb-0">Danh sách sản phẩm</h5>
+                                    <a class="button" href="/admin/dashboard/products-manager/add">
+                                        <i class="fas fa-plus"></i>
+                                        Thêm sản phẩm
+                                    </a>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="bg-light">
+                                                <tr class="border-0">
+                                                    <th class="border-0">STT</th>
+                                                    <th class="border-0">Tên sản phẩm</th>
+                                                    <th class="border-0">Nhà cung cấp</th>
+                                                    <th class="border-0">Danh mục</th>
+                                                    <th class="border-0">Số lượng tồn</th>
+                                                    <th class="border-0">Đơn giá</th>
+                                                    <th class="border-0">ĐVT</th>
+                                                    <th class="border-0">Trạng thái</th>
+                                                    <th class="border-0 text-center">Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% listProduct =  products.length > numberItemPerpage ?
+                                                 products.slice((page - 1)*numberItemPerpage, numberItemPerpage*page) :
+                                                 products %> 
+                                                <% i = 1 + (page - 1) * numberItemPerpage %> 
+                                                <% listTypeCode = types.map(type => type._id.toString()) %>
+                                                <% listProduct.forEach(element => { 
+                                                    // Xác định trạng thái stock
+                                                    let stockClass = 'stock-high';
+                                                    let stockText = element.description.stock || 100;
+                                                    if (stockText < 10) {
+                                                        stockClass = 'stock-low';
+                                                    } else if (stockText < 50) {
+                                                        stockClass = 'stock-medium';
+                                                    }
+                                                %>
+                                                    <tr>
+                                                        <td><%= i %></td>
+                                                        <td>
+                                                            <div class="product-name-cell">
+                                                                <% if(element.description.imageList && element.description.imageList.length > 0) { %>
+                                                                    <img src="<%= element.description.imageList[0] %>" alt="<%= element.productName %>" class="product-image">
+                                                                <% } else { %>
+                                                                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                                                        <i class="fas fa-image text-muted"></i>
+                                                                    </div>
+                                                                <% } %>
+                                                                <span><%= element.productName %></span>
+                                                            </div>
+                                                        </td>
+                                                        <% let supplierFound = false; %>
+                                                        <% suppliers.forEach(supplier => { %>
+                                                            <% if(supplier._id.toString() == element.description.supplierCode) { %>
+                                                                <td><%= supplier.supplierName %></td>
+                                                                <% supplierFound = true; %>
+                                                            <% } %>
+                                                        <% }) %>
+                                                        <% if(!supplierFound) { %>
+                                                            <td class="text-muted">Không xác định</td>
+                                                        <% } %>
+                                                        
+                                                        <% let categoryFound = false; %>
+                                                        <% types.forEach(type => { %>
+                                                            <% if(type._id.toString() == element.description.typeCode) { %>
+                                                                <td><%= type.typeName %></td>
+                                                                <% categoryFound = true; %>
+                                                            <% } %>
+                                                        <% }) %>
+                                                        <% if(!categoryFound) { %>
+                                                            <td class="text-muted">Không xác định</td>
+                                                        <% } %>
+                                                        
+                                                        <td>
+                                                            <span class="stock-badge <%= stockClass %>">
+                                                                <%= stockText %>
+                                                            </span>
+                                                        </td>
+                                                        <td><%= element.description.price.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ</td>
+                                                        <td><%= element.description.unit %></td>
+                                                        <td>
+                                                            <% if(element.description.status == true) { %>
+                                                                <span class="status-badge status-active">Hiển thị</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge status-inactive">Ẩn</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <div class="action-buttons">
+                                                                <a class="btn-edit" href="/admin/dashboard/products-manager/update/<%= element._id %>" title="Chỉnh sửa">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </a>
+                                                                <a class="btn-delete" onclick="comfirmDelete('Bạn có muốn xóa sản phẩm này?', event)" href="/admin/dashboard/products-manager/delete/<%= element._id %>" title="Xóa">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </a>
+                                                                <a class="btn-toggle" onclick="comfirmDelete('Bạn có muốn ẩn/hiển thị sản phẩm này?', event)" href="/admin/dashboard/products-manager/hide/<%= element._id %>" title="Ẩn/Hiện">
+                                                                    <i class="fas fa-eye-slash"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                        <% i++ %> 
+                                                    </tr>
+                                                <% }) %> 
+                                                <% if(listProduct.length === 0) { %>
+                                                    <tr>
+                                                        <td colspan="9" class="text-center py-4 text-muted">
+                                                            <i class="fas fa-box-open fa-2x mb-2"></i>
+                                                            <p>Không có sản phẩm nào</p>
+                                                        </td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <% if(products.length > numberItemPerpage) { %>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-end">
+                                        <% 
+                                        numberPage = Math.ceil(products.length / numberItemPerpage);
+                                        let startPage = Math.max(1, page - 2);
+                                        let endPage = Math.min(numberPage, page + 2);
+                                        
+                                        if (startPage > 1) { %>
+                                            <li class="page-item">
+                                                <a class="page-link" href="/admin/dashboard/products-manager/1">1</a>
+                                            </li>
+                                            <% if (startPage > 2) { %>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            <% } %>
+                                        <% } %>
+                                        
+                                        <% for(var i = startPage; i <= endPage; i++) { %>
+                                            <li class="page-item <%= i == page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/dashboard/products-manager/<%= i %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+                                        
+                                        <% if (endPage < numberPage) { %>
+                                            <% if (endPage < numberPage - 1) { %>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            <% } %>
+                                            <li class="page-item">
+                                                <a class="page-link" href="/admin/dashboard/products-manager/<%= numberPage %>"><%= numberPage %></a>
+                                            </li>
+                                        <% } %>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end wrapper  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- end main wrapper  -->
+    <!-- ============================================================== -->
+    <!-- Optional JavaScript -->
+    <!-- jquery 3.3.1 -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <!-- bootstap bundle js -->
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <!-- slimscroll js -->
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <!-- main js -->
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <script>
+       function comfirmDelete(msg, event) {
+            if(window.confirm(msg) == true) {
+                return true;
+            }
+            event.preventDefault();
+            return false;
+        }
+        
+        // Xử lý tìm kiếm
+        $(document).ready(function() {
+            $('.search-box input').on('keyup', function() {
+                const searchText = $(this).val().toLowerCase();
+                $('table tbody tr').each(function() {
+                    const productName = $(this).find('td:nth-child(2)').text().toLowerCase();
+                    if (productName.includes(searchText)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <% if(message && message.length > 0){%>
+        <script>
+            toastr.success('<%= message %>','Thông báo', {timeOut: 1500, progressBar: true, closeButton: true});
+        </script>
+    <%} %> 
+</body>
+ 
+</html>

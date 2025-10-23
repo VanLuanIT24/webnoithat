@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Title -->
+    <title>Amado - Thêm Danh Mục Mới</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .form-header h2 {
+            color: #4e73df;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: #e74a3b;
+        }
+        
+        .form-control {
+            border-radius: 5px;
+            padding: 10px 15px;
+            border: 1px solid #d1d3e2;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .thumbnail-preview {
+            margin-top: 15px;
+            text-align: center;
+            border: 2px dashed #d1d3e2;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .thumbnail-preview:hover {
+            border-color: #4e73df;
+        }
+        
+        .thumbnail-preview img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .btn-submit {
+            background-color: #4e73df;
+            border-color: #4e73df;
+            color: white;
+            padding: 10px 30px;
+            font-weight: 600;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover {
+            background-color: #2e59d9;
+            border-color: #2e59d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-cancel {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+            padding: 10px 30px;
+            font-weight: 600;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4e73df;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .form-help {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px 20px;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn-submit, .btn-cancel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================================== -->
+    <!-- main wrapper -->
+    <!-- ============================================================== -->
+    <div class="dashboard-main-wrapper">
+        <!-- ============================================================== -->
+        <!-- navbar -->
+        <!-- ============================================================== -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard"><img class="logo-img" src="/public/img/core-img/logo.png" alt="logo"></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse " id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<%= customer.avatar %> " alt="" class="user-avatar-md rounded-circle"></a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %> </h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Tài khoản</a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout"><i class="fas fa-power-off mr-2"></i>Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end navbar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- left sidebar -->
+        <!-- ============================================================== -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">
+                                Menu
+                            </li>
+                            <li class="nav-item ">
+                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1"><i class="fa fa-fw fa-user-circle"></i>Bảng điều khiển <span class="badge badge-success">6</span></a>
+                                <div id="submenu-1" class="collapse submenu">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end left sidebar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- wrapper  -->
+        <!-- ============================================================== -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <!-- ============================================================== -->
+                    <!-- pageheader  -->
+                    <!-- ============================================================== -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <h2 class="pageheader-title"><i class="fas fa-plus-circle mr-2"></i> Thêm Danh Mục Mới </h2>
+                                <div class="page-breadcrumb">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Bảng điều khiển</a></li>
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard/categories-manager" class="breadcrumb-link">Quản lý danh mục</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Thêm danh mục mới</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end pageheader  -->
+                    <!-- ============================================================== -->
+                    
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Thông tin danh mục</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/admin/dashboard/categories-manager/add" method="POST" enctype="multipart/form-data" id="addCategoryForm">
+                                        <div class="form-container">
+                                            <div class="form-header">
+                                                <h2>Thêm Danh Mục Mới</h2>
+                                                <p class="text-muted">Điền đầy đủ thông tin bên dưới để thêm danh mục mới</p>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="name" class="form-label required-field">Tên danh mục</label>
+                                                <input type="text" class="form-control" id="name" name="name" placeholder="Nhập tên danh mục" required>
+                                                <div class="form-help">Tên danh mục nên ngắn gọn, dễ nhớ và mô tả rõ nội dung của danh mục.</div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="thumbnail" class="form-label required-field">Hình ảnh danh mục</label>
+                                                <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*" required>
+                                                <div class="thumbnail-preview" id="thumbnailPreview">
+                                                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                                    <p class="upload-text">Chọn hoặc kéo thả hình ảnh vào đây</p>
+                                                    <img id="previewImage" src="" alt="Preview">
+                                                </div>
+                                                <div class="form-help">Hình ảnh nên có tỷ lệ 16:9 và kích thước tối thiểu 400x225px để hiển thị tốt nhất.</div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label">Trạng thái</label>
+                                                <div class="status-toggle">
+                                                    <label class="toggle-switch">
+                                                        <input type="checkbox" id="status" name="status" checked>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                    <span id="statusText">Đang hoạt động</span>
+                                                </div>
+                                                <input type="hidden" name="status" value="true" id="statusHidden">
+                                                <div class="form-help">Khi bật, danh mục sẽ hiển thị trên website. Khi tắt, danh mục sẽ bị ẩn.</div>
+                                            </div>
+                                            
+                                            <div class="form-actions">
+                                                <button type="submit" class="btn btn-submit">
+                                                    <i class="fas fa-save mr-2"></i> Lưu danh mục
+                                                </button>
+                                                <a href="/admin/dashboard/categories-manager" class="btn btn-cancel">
+                                                    <i class="fas fa-times mr-2"></i> Hủy bỏ
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- footer -->
+            <!-- ============================================================== -->
+            <div class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                             Copyright © 2023 Amado. All rights reserved. Dashboard by <a href="#">VanLuanIT2004</a>.
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            <div class="text-md-right footer-links d-none d-sm-block">
+                                <a href="javascript: void(0);">Về cửa hàng</a>
+                                <a href="javascript: void(0);">Hỗ trợ</a>
+                                <a href="javascript: void(0);">Liên hệ với chúng tôi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- end footer -->
+            <!-- ============================================================== -->
+        </div>
+        <!-- ============================================================== -->
+        <!-- end wrapper  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- end main wrapper  -->
+    <!-- ============================================================== -->
+    <!-- Optional JavaScript -->
+    <!-- jquery 3.3.1 -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <!-- bootstap bundle js -->
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <!-- slimscroll js -->
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <!-- main js -->
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Xử lý hiển thị preview hình ảnh
+            $('#thumbnail').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        $('#previewImage').attr('src', e.target.result);
+                        $('#previewImage').show();
+                        $('.upload-icon').hide();
+                        $('.upload-text').text('Hình ảnh đã chọn: ' + file.name);
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Cho phép kéo thả file
+            $('#thumbnailPreview').on('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css('border-color', '#4e73df');
+                $(this).css('background-color', '#f8f9fe');
+            });
+            
+            $('#thumbnailPreview').on('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css('border-color', '#d1d3e2');
+                $(this).css('background-color', 'transparent');
+            });
+            
+            $('#thumbnailPreview').on('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).css('border-color', '#d1d3e2');
+                $(this).css('background-color', 'transparent');
+                
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    $('#thumbnail')[0].files = files;
+                    $('#thumbnail').trigger('change');
+                }
+            });
+            
+            // Xử lý toggle trạng thái
+            $('#status').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#statusText').text('Đang hoạt động');
+                    $('#statusHidden').val('true');
+                } else {
+                    $('#statusText').text('Đã ẩn');
+                    $('#statusHidden').val('false');
+                }
+            });
+
+            // Khởi tạo giá trị ban đầu
+            $('#statusHidden').val('true');
+            
+            // Xử lý form submission
+            $('#addCategoryForm').on('submit', function(e) {
+                // Kiểm tra các trường bắt buộc
+                const name = $('#name').val().trim();
+                const thumbnail = $('#thumbnail').val();
+                
+                if (!name) {
+                    e.preventDefault();
+                    toastr.error('Vui lòng nhập tên danh mục', 'Lỗi');
+                    $('#name').focus();
+                    return false;
+                }
+                
+                if (!thumbnail) {
+                    e.preventDefault();
+                    toastr.error('Vui lòng chọn hình ảnh cho danh mục', 'Lỗi');
+                    return false;
+                }
+                
+                // Hiển thị thông báo đang xử lý
+                toastr.info('Đang xử lý thêm danh mục...', 'Thông báo', {timeOut: 0});
+                
+                // Form sẽ được submit bình thường sau khi kiểm tra
+            });
+            
+            // Click vào preview để mở file picker
+            $('#thumbnailPreview').on('click', function() {
+                $('#thumbnail').click();
+            });
+        });
+    </script>
+</body>
+</html>

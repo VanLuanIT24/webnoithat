@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+  <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+  <link rel="icon" href="/public/img/core-img/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <title>Thêm sản phẩm - Amado Admin</title>
+  <style>
+    :root {
+      --primary-color: #4e73df;
+      --success-color: #1cc88a;
+      --danger-color: #e74a3b;
+      --warning-color: #f6c23e;
+    }
+    
+    .img-preview { 
+      width: 120px; 
+      height: 120px; 
+      object-fit: cover;
+      margin-right: 10px; 
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .img-preview:hover {
+      transform: scale(1.05);
+    }
+    
+    .thumbs { 
+      display: flex; 
+      margin-top: 15px; 
+      flex-wrap: wrap; 
+    }
+    
+    .card-header .button { 
+      float: right; 
+    }
+    
+    .form-section {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .section-title i {
+      margin-right: 8px;
+    }
+    
+    .required-label::after {
+      content: " *";
+      color: var(--danger-color);
+    }
+    
+    .preview-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger-color);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    
+    .custom-file-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 15px;
+      background-color: #f8f9fc;
+      border: 2px dashed #d1d3e2;
+      border-radius: 5px;
+      color: #6e707e;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-align: center;
+    }
+    
+    .custom-file-btn:hover {
+      background-color: #eaecf4;
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .form-control:focus, .custom-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+      background-color: #2e59d9;
+      border-color: #2e59d9;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      color: var(--danger-color);
+      font-size: 0.875rem;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .form-control.error {
+      border-color: var(--danger-color);
+    }
+    
+    .character-count {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-align: right;
+      margin-top: 5px;
+    }
+    
+    .discount-section {
+      background-color: #f8f9fc;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .discount-fields {
+      display: none;
+    }
+    
+    .stock-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .stock-toggle {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+  
+  <div class="container mt-4">
+    <div class="card shadow">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-plus-circle text-primary mr-2"></i>
+            Thêm sản phẩm mới
+          </h5>
+          <a class="btn btn-sm btn-outline-secondary" href="/admin/dashboard/products-manager">
+            <i class="fas fa-arrow-left mr-1"></i> Quay lại
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="addProductForm" action="/admin/dashboard/products-manager/add" method="POST" enctype="multipart/form-data">
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-info-circle"></i> Thông tin cơ bản
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-8">
+                <label for="productName" class="required-label">Tên sản phẩm</label>
+                <input required name="productname" type="text" class="form-control" id="productName" placeholder="Nhập tên sản phẩm">
+                <div class="error-message" id="productNameError">Vui lòng nhập tên sản phẩm</div>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="price" class="required-label">Đơn giá</label>
+                <div class="input-group">
+                  <input required name="price" type="number" min="0" class="form-control" id="price" placeholder="Giá sản phẩm">
+                  <div class="input-group-append">
+                    <span class="input-group-text">VNĐ</span>
+                  </div>
+                </div>
+                <div class="error-message" id="priceError">Vui lòng nhập giá hợp lệ</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="description" class="required-label">Mô tả sản phẩm</label>
+              <textarea required name="description" id="description" class="form-control" rows="4" placeholder="Mô tả chi tiết về sản phẩm" maxlength="500"></textarea>
+              <div class="character-count">
+                <span id="charCount">0</span>/500 ký tự
+              </div>
+              <div class="error-message" id="descriptionError">Vui lòng nhập mô tả sản phẩm</div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-tags"></i> Phân loại sản phẩm
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="categories" class="required-label">Danh mục</label>
+                <select required id="categories" name="categories" class="form-control custom-select">
+                  <option value="">-- Chọn danh mục --</option>
+                  <% if(types && types.length){ types.forEach(t => { %>
+                    <option value="<%= t._id %>"><%= t.typeName %></option>
+                  <% }) } %>
+                </select>
+                <div class="error-message" id="categoriesError">Vui lòng chọn danh mục</div>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="supplier" class="required-label">Nhà cung cấp</label>
+                <select required id="supplier" name="supplier" class="form-control custom-select">
+                  <option value="">-- Chọn nhà cung cấp --</option>
+                  <% if(suppliers && suppliers.length){ suppliers.forEach(s => { %>
+                    <option value="<%= s._id %>"><%= s.supplierName %></option>
+                  <% }) } %>
+                </select>
+                <div class="error-message" id="supplierError">Vui lòng chọn nhà cung cấp</div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="unit">Đơn vị tính</label>
+                <input name="unit" id="unit" class="form-control" placeholder="VD: cái, bộ, chiếc" value="Cái">
+              </div>
+              <div class="form-group col-md-4">
+                <label for="status">Trạng thái</label>
+                <select id="status" name="status" class="form-control custom-select">
+                  <option value="true" selected>Hiển thị</option>
+                  <option value="false">Ẩn</option>
+                </select>
+              </div>
+              <div class="form-group col-md-4 d-flex align-items-end">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="featured" name="featured">
+                  <label class="custom-control-label" for="featured">Sản phẩm nổi bật</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-boxes"></i> Quản lý kho hàng
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="stock" class="required-label">Số lượng tồn kho</label>
+                <input required name="stock" type="number" min="0" class="form-control" id="stock" placeholder="Số lượng sản phẩm" value="0">
+                <div class="error-message" id="stockError">Vui lòng nhập số lượng hợp lệ</div>
+              </div>
+              <div class="form-group col-md-6 d-flex align-items-end">
+                <div class="stock-section">
+                  <div class="stock-toggle">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" id="inStock" name="inStock" checked>
+                      <label class="custom-control-label" for="inStock">Còn hàng</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHẦN DISCOUNT ĐÃ ĐƯỢC CẬP NHẬT -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-percentage"></i> Khuyến mãi
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="discountType">Loại giảm giá</label>
+                <select id="discountType" name="discountType" class="form-control custom-select">
+                  <option value="none" selected>Không giảm giá</option>
+                  <option value="percent">Giảm theo phần trăm</option>
+                  <option value="fixed">Giảm giá cố định</option>
+                </select>
+              </div>
+              <div class="form-group col-md-4 discount-fields">
+                <label for="discountValue">Giá trị giảm</label>
+                <div class="input-group">
+                  <input name="discountValue" type="number" min="0" step="0.01" class="form-control" id="discountValue" placeholder="Giá trị giảm">
+                  <div class="input-group-append">
+                    <span class="input-group-text" id="discountUnit">%</span>
+                  </div>
+                </div>
+                <small class="form-text text-muted" id="discountHelp">
+                  Đối với phần trăm: 0-100, Đối với giá cố định: số tiền giảm
+                </small>
+              </div>
+              <div class="form-group col-md-4 discount-fields">
+                <label for="discountEndDate">Ngày kết thúc</label>
+                <input name="discountEndDate" type="date" class="form-control" id="discountEndDate">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-images"></i> Hình ảnh sản phẩm
+            </div>
+            
+            <div class="form-group">
+              <label class="required-label">Tải lên hình ảnh</label>
+              <div class="file-input-wrapper">
+                <div class="custom-file-btn p-4">
+                  <div class="text-center">
+                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                    <p class="mb-1">Kéo thả hình ảnh vào đây hoặc click để chọn</p>
+                    <small class="text-muted">Hỗ trợ: JPG, PNG, GIF (Tối đa 4 ảnh)</small>
+                  </div>
+                  <input required accept="image/*" multiple name="imagelist" id="imagelist" type="file" class="form-control-file">
+                </div>
+              </div>
+              <div class="error-message" id="imageError">Vui lòng chọn ít nhất một hình ảnh</div>
+            </div>
+            
+            <div id="previews" class="thumbs"></div>
+          </div>
+
+          <div class="form-row mt-4">
+            <div class="form-group col-md-12 text-right">
+              <button type="button" id="resetBtn" class="btn btn-outline-secondary mr-2">
+                <i class="fas fa-redo mr-1"></i> Đặt lại
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-1"></i> Lưu sản phẩm
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+  <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Biến lưu trữ các file đã chọn
+      let selectedFiles = [];
+      
+      // Đếm ký tự trong textarea
+      $('#description').on('input', function() {
+        const count = $(this).val().length;
+        $('#charCount').text(count);
+      });
+      
+      // Xử lý khi chọn file
+      $('#imagelist').on('change', function(e) {
+        const files = Array.from(e.target.files);
+        
+        // Kiểm tra số lượng file
+        if (files.length > 4) {
+          showError('imageError', 'Chỉ được chọn tối đa 4 ảnh');
+          return;
+        }
+        
+        // Kiểm tra loại file
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+        
+        if (invalidFiles.length > 0) {
+          showError('imageError', 'Chỉ chấp nhận file ảnh (JPG, PNG, GIF)');
+          return;
+        }
+        
+        // Reset lỗi
+        hideError('imageError');
+        
+        // Cập nhật danh sách file
+        selectedFiles = files;
+        
+        // Hiển thị preview
+        displayImagePreviews(files);
+      });
+      
+      // Hiển thị preview ảnh
+      function displayImagePreviews(files) {
+        const previews = $('#previews');
+        previews.empty();
+        
+        files.forEach((file, index) => {
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+            const previewContainer = $('<div class="preview-container"></div>');
+            const img = $('<img>').attr('src', e.target.result).addClass('img-preview');
+            const removeBtn = $('<div class="remove-image"><i class="fas fa-times"></i></div>');
+            
+            removeBtn.on('click', function() {
+              // Xóa file khỏi danh sách
+              selectedFiles.splice(index, 1);
+              
+              // Cập nhật input file
+              updateFileInput();
+              
+              // Cập nhật preview
+              displayImagePreviews(selectedFiles);
+            });
+            
+            previewContainer.append(img).append(removeBtn);
+            previews.append(previewContainer);
+          };
+          
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      // Cập nhật input file với các file đã chọn
+      function updateFileInput() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        $('#imagelist')[0].files = dt.files;
+      }
+      
+      // Kéo thả file
+      const fileInputWrapper = $('.file-input-wrapper');
+      
+      fileInputWrapper.on('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('dragover');
+      });
+      
+      fileInputWrapper.on('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+      });
+      
+      fileInputWrapper.on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        $('#imagelist')[0].files = files;
+        $('#imagelist').trigger('change');
+      });
+      
+      // PHẦN XỬ LÝ DISCOUNT ĐÃ ĐƯỢC CẬP NHẬT
+      // Xử lý phần giảm giá
+      $('#discountType').on('change', function() {
+        const discountType = $(this).val();
+        const discountFields = $('.discount-fields');
+        const discountValue = $('#discountValue');
+        
+        if (discountType === 'none') {
+          discountFields.hide();
+          discountValue.val('');
+          $('#discountEndDate').val('');
+          $('#discountUnit').text('%');
+        } else {
+          discountFields.show();
+          $('#discountUnit').text(discountType === 'percent' ? '%' : 'VNĐ');
+          
+          // Set validation rules
+          if (discountType === 'percent') {
+            discountValue.attr('max', '100');
+            discountValue.attr('step', '1');
+            $('#discountHelp').text('Nhập giá trị từ 0 đến 100%');
+          } else {
+            discountValue.removeAttr('max');
+            discountValue.attr('step', '0.01');
+            $('#discountHelp').text('Nhập số tiền giảm (VNĐ)');
+          }
+        }
+      });
+      
+      // Khởi tạo trạng thái ban đầu cho discount
+      $('.discount-fields').hide();
+      
+      // Validate form
+      $('#addProductForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Reset lỗi
+        $('.error-message').hide();
+        $('.form-control').removeClass('error');
+        
+        let isValid = true;
+        
+        // Kiểm tra tên sản phẩm
+        if (!$('#productName').val().trim()) {
+          showError('productNameError', 'Vui lòng nhập tên sản phẩm');
+          isValid = false;
+        }
+        
+        // Kiểm tra giá
+        if (!$('#price').val() || $('#price').val() < 0) {
+          showError('priceError', 'Vui lòng nhập giá hợp lệ');
+          isValid = false;
+        }
+        
+        // Kiểm tra mô tả
+        if (!$('#description').val().trim()) {
+          showError('descriptionError', 'Vui lòng nhập mô tả sản phẩm');
+          isValid = false;
+        }
+        
+        // Kiểm tra danh mục
+        if (!$('#categories').val()) {
+          showError('categoriesError', 'Vui lòng chọn danh mục');
+          isValid = false;
+        }
+        
+        // Kiểm tra nhà cung cấp
+        if (!$('#supplier').val()) {
+          showError('supplierError', 'Vui lòng chọn nhà cung cấp');
+          isValid = false;
+        }
+        
+        // Kiểm tra số lượng tồn kho
+        if (!$('#stock').val() || $('#stock').val() < 0) {
+          showError('stockError', 'Vui lòng nhập số lượng hợp lệ');
+          isValid = false;
+        }
+        
+        // Kiểm tra hình ảnh
+        if (selectedFiles.length === 0) {
+          showError('imageError', 'Vui lòng chọn ít nhất một hình ảnh');
+          isValid = false;
+        }
+        
+        if (isValid) {
+          // Hiển thị loading
+          $('#loadingOverlay').show();
+          
+          // Gửi form
+          this.submit();
+        }
+      });
+      
+      // Nút reset
+      $('#resetBtn').on('click', function() {
+        if (confirm('Bạn có chắc muốn đặt lại tất cả thông tin?')) {
+          $('#addProductForm')[0].reset();
+          selectedFiles = [];
+          $('#previews').empty();
+          $('.error-message').hide();
+          $('.form-control').removeClass('error');
+          $('#charCount').text('0');
+          $('.discount-fields').hide();
+        }
+      });
+      
+      // Hiển thị lỗi
+      function showError(elementId, message) {
+        $('#' + elementId).text(message).show();
+        $('#' + elementId).prev().addClass('error');
+      }
+      
+      // Ẩn lỗi
+      function hideError(elementId) {
+        $('#' + elementId).hide();
+        $('#' + elementId).prev().removeClass('error');
+      }
+      
+      // Tự động ẩn loading sau 10s (phòng trường hợp có lỗi)
+      setTimeout(function() {
+        $('#loadingOverlay').hide();
+      }, 10000);
+    });
+  </script>
+
+  <% if(message && message.length > 0){ %>
+    <script>
+      toastr.success('<%= message %>','Thông báo', {timeOut:1500, progressBar:true, closeButton:true});
+    </script>
+  <% } %>
+</body>
+</html>

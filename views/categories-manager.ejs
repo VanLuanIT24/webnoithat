@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/public/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/assets/libs/css/style.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Title -->
+    <title>Amado - Quản lý Danh mục</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/public/img/core-img/favicon.ico" />
+    
+    <style>
+        .category-card {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .category-thumbnail {
+            height: 180px;
+            object-fit: cover;
+            width: 100%;
+        }
+        
+        .category-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .page-item.active .page-link {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.875rem;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-right: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 12px;
+            color: #6c757d;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .stats-card {
+            border-left: 4px solid #4e73df;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Thẻ ẩn để lưu flash message -->
+    <input type="hidden" id="flashMessage" value="<%= message || '' %>">
+    
+    <!-- ============================================================== -->
+    <!-- main wrapper -->
+    <!-- ============================================================== -->
+    <div class="dashboard-main-wrapper">
+        <!-- ============================================================== -->
+        <!-- navbar -->
+        <!-- ============================================================== -->
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="/admin/dashboard"><img class="logo-img" src="/public/img/core-img/logo.png" alt="logo"></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse " id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto navbar-right-top">
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<%= customer.avatar %> " alt="" class="user-avatar-md rounded-circle"></a>
+                            <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
+                                <div class="nav-user-info">
+                                    <% fullName = customer.fullNameCustomer.firstName + " " + customer.fullNameCustomer.lastName %> 
+                                    <h5 class="mb-0 text-white nav-user-name"><%= fullName %> </h5>
+                                </div>
+                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Tài khoản</a>
+                                <a class="dropdown-item" href="/admin/dashboard/logout"><i class="fas fa-power-off mr-2"></i>Đăng xuất</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end navbar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- left sidebar -->
+        <!-- ============================================================== -->
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-divider">
+                                Menu
+                            </li>
+                            <li class="nav-item ">
+                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-1"><i class="fa fa-fw fa-user-circle"></i>Bảng điều khiển <span class="badge badge-success">6</span></a>
+                                <div id="submenu-1" class="collapse submenu">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard">Tổng quan</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link active" href="/admin/dashboard/categories-manager">Quản lý danh mục</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/products-manager">Quản lý sản phẩm</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1-2" aria-controls="submenu-1-2">Quản lý đơn hàng</a>
+                                            <div id="submenu-1-2" class="collapse submenu">
+                                                <ul class="nav flex-column">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/pending-orders-manager">Chờ xác nhận</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" href="/admin/dashboard/orders-manager">Tình trạng đơn hàng</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/admin/dashboard/users-manager">Quản lý người dùng</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        <!-- ============================================================== -->
+        <!-- end left sidebar -->
+        <!-- ============================================================== -->
+        <!-- ============================================================== -->
+        <!-- wrapper  -->
+        <!-- ============================================================== -->
+        <div class="dashboard-wrapper">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <!-- ============================================================== -->
+                    <!-- pageheader  -->
+                    <!-- ============================================================== -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="page-header">
+                                <h2 class="pageheader-title"><i class="fas fa-tags mr-2"></i> Quản lý Danh mục </h2>
+                                <div class="page-breadcrumb">
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="breadcrumb-link">Bảng điều khiển</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Quản lý danh mục</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end pageheader  -->
+                    <!-- ============================================================== -->
+                    
+                    <!-- Thống kê nhanh -->
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                            <div class="card border-3 border-top border-top-primary stats-card">
+                                <div class="card-body">
+                                    <h5 class="text-muted">Tổng số danh mục</h5>
+                                    <div class="metric-value d-inline-block">
+                                        <h1 class="mb-1"><%= categories.length %></h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                            <div class="card border-3 border-top border-top-success stats-card">
+                                <div class="card-body">
+                                    <h5 class="text-muted">Đang hoạt động</h5>
+                                    <div class="metric-value d-inline-block">
+                                        <% activeCount = categories.filter(cat => cat.status).length %>
+                                        <h1 class="mb-1 text-success"><%= activeCount %></h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                            <div class="card border-3 border-top border-top-warning stats-card">
+                                <div class="card-body">
+                                    <h5 class="text-muted">Đã ẩn</h5>
+                                    <div class="metric-value d-inline-block">
+                                        <% inactiveCount = categories.filter(cat => !cat.status).length %>
+                                        <h1 class="mb-1 text-warning"><%= inactiveCount %></h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
+                            <div class="card border-3 border-top border-top-info stats-card">
+                                <div class="card-body">
+                                    <h5 class="text-muted">Trang hiện tại</h5>
+                                    <div class="metric-value d-inline-block">
+                                        <h1 class="mb-1 text-info"><%= page %>/<%= Math.ceil(categories.length / numberItemPerpage) %></h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thanh công cụ -->
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Danh sách danh mục</h5>
+                                    <a href="/admin/dashboard/categories-manager/add" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus mr-1"></i> Thêm danh mục mới
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Thanh tìm kiếm và bộ lọc -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <div class="search-box">
+                                                <input type="text" class="form-control" placeholder="Tìm kiếm danh mục...">
+                                                <i class="fas fa-search"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-control">
+                                                <option value="">Tất cả trạng thái</option>
+                                                <option value="active">Đang hoạt động</option>
+                                                <option value="inactive">Đã ẩn</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-control">
+                                                <option value="">Sắp xếp theo</option>
+                                                <option value="name-asc">Tên A-Z</option>
+                                                <option value="name-desc">Tên Z-A</option>
+                                                <option value="newest">Mới nhất</option>
+                                                <option value="oldest">Cũ nhất</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Danh sách danh mục -->
+                                    <div class="row">
+                                        <% if (categories && categories.length > 0) { %>
+                                            <% 
+                                                // Tính toán phân trang
+                                                const startIndex = (page - 1) * numberItemPerpage;
+                                                const endIndex = Math.min(startIndex + numberItemPerpage, categories.length);
+                                                const paginatedCategories = categories.slice(startIndex, endIndex);
+                                            %>
+                                            
+                                            <% paginatedCategories.forEach((category, index) => { %>
+                                                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
+                                                    <div class="card category-card">
+                                                        <div class="position-relative">
+                                                            <img src="<%= category.thumbnail %>" class="category-thumbnail" alt="<%= category.typeName %>">
+                                                            <span class="badge <%= category.status ? 'badge-success' : 'badge-secondary' %> status-badge">
+                                                                <%= category.status ? 'Đang hoạt động' : 'Đã ẩn' %>
+                                                            </span>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><%= category.typeName %></h5>
+                                                            <p class="card-text text-muted small">ID: <%= category._id %></p>
+                                                            <div class="category-actions">
+                                                                <a href="/admin/dashboard/categories-manager/update/<%= category._id %>" class="btn btn-info btn-sm action-btn">
+                                                                    <i class="fas fa-edit mr-1"></i> Sửa
+                                                                </a>
+                                                                <a href="/admin/dashboard/categories-manager/delete/<%= category._id %>" class="btn btn-danger btn-sm action-btn" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">
+                                                                    <i class="fas fa-trash mr-1"></i> Xóa
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <div class="col-12">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-tags"></i>
+                                                    <h3>Chưa có danh mục nào</h3>
+                                                    <p>Bắt đầu bằng cách thêm danh mục đầu tiên của bạn.</p>
+                                                    <a href="/admin/dashboard/categories-manager/add" class="btn btn-primary mt-3">
+                                                        <i class="fas fa-plus mr-1"></i> Thêm danh mục mới
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <!-- Phân trang -->
+                                    <% if (categories && categories.length > 0) { %>
+                                        <div class="pagination-container">
+                                            <nav aria-label="Page navigation">
+                                                <ul class="pagination">
+                                                    <% 
+                                                        const totalPages = Math.ceil(categories.length / numberItemPerpage);
+                                                        const currentPage = parseInt(page);
+                                                        
+                                                        // Nút Previous
+                                                        if (currentPage > 1) {
+                                                    %>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="/admin/dashboard/categories-manager/<%= currentPage - 1 %>" aria-label="Previous">
+                                                                <span aria-hidden="true">&laquo;</span>
+                                                                <span class="sr-only">Trang trước</span>
+                                                            </a>
+                                                        </li>
+                                                    <% } else { %>
+                                                        <li class="page-item disabled">
+                                                            <a class="page-link" href="#" aria-label="Previous">
+                                                                <span aria-hidden="true">&laquo;</span>
+                                                                <span class="sr-only">Trang trước</span>
+                                                            </a>
+                                                        </li>
+                                                    <% } %>
+                                                    
+                                                    <% 
+                                                        // Hiển thị các nút trang
+                                                        let startPage = Math.max(1, currentPage - 2);
+                                                        let endPage = Math.min(totalPages, currentPage + 2);
+                                                        
+                                                        for (let i = startPage; i <= endPage; i++) {
+                                                    %>
+                                                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                            <a class="page-link" href="/admin/dashboard/categories-manager/<%= i %>"><%= i %></a>
+                                                        </li>
+                                                    <% } %>
+                                                    
+                                                    <% 
+                                                        // Nút Next
+                                                        if (currentPage < totalPages) {
+                                                    %>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="/admin/dashboard/categories-manager/<%= currentPage + 1 %>" aria-label="Next">
+                                                                <span aria-hidden="true">&raquo;</span>
+                                                                <span class="sr-only">Trang sau</span>
+                                                            </a>
+                                                        </li>
+                                                    <% } else { %>
+                                                        <li class="page-item disabled">
+                                                            <a class="page-link" href="#" aria-label="Next">
+                                                                <span aria-hidden="true">&raquo;</span>
+                                                                <span class="sr-only">Trang sau</span>
+                                                            </a>
+                                                        </li>
+                                                    <% } %>
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- footer -->
+            <!-- ============================================================== -->
+            <div class="footer">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                             Copyright © 2023 Amado. All rights reserved. Dashboard by <a href="#">HuuHung</a>.
+                        </div>
+                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
+                            <div class="text-md-right footer-links d-none d-sm-block">
+                                <a href="javascript: void(0);">Về cửa hàng</a>
+                                <a href="javascript: void(0);">Hỗ trợ</a>
+                                <a href="javascript: void(0);">Liên hệ với chúng tôi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- end footer -->
+            <!-- ============================================================== -->
+        </div>
+        <!-- ============================================================== -->
+        <!-- end wrapper  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- end main wrapper  -->
+    <!-- ============================================================== -->
+    <!-- Optional JavaScript -->
+    <!-- jquery 3.3.1 -->
+    <script src="/public/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <!-- bootstap bundle js -->
+    <script src="/public/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <!-- slimscroll js -->
+    <script src="/public/assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <!-- main js -->
+    <script src="/public/assets/libs/js/main-js.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        // Hiển thị thông báo từ flash message
+        $(document).ready(function() {
+            // Lấy message từ thẻ ẩn
+            const flashMessage = $('#flashMessage').val();
+            if (flashMessage && flashMessage.length > 0) {
+                toastr.success(flashMessage, 'Thông báo', {
+                    timeOut: 3000, 
+                    progressBar: true, 
+                    closeButton: true
+                });
+            }
+            
+            // Xử lý tìm kiếm danh mục
+            $('.search-box input').on('keyup', function() {
+                const searchText = $(this).val().toLowerCase();
+                $('.category-card').each(function() {
+                    const categoryName = $(this).find('.card-title').text().toLowerCase();
+                    if (categoryName.includes(searchText)) {
+                        $(this).parent().show();
+                    } else {
+                        $(this).parent().hide();
+                    }
+                });
+            });
+            
+            // Xử lý lọc theo trạng thái
+            $('select').eq(0).on('change', function() {
+                const statusFilter = $(this).val();
+                $('.category-card').each(function() {
+                    const status = $(this).find('.badge').text().trim();
+                    if (statusFilter === '' || 
+                        (statusFilter === 'active' && status === 'Đang hoạt động') ||
+                        (statusFilter === 'inactive' && status === 'Đã ẩn')) {
+                        $(this).parent().show();
+                    } else {
+                        $(this).parent().hide();
+                    }
+                });
+            });
+            
+            // Xử lý sắp xếp
+            $('select').eq(1).on('change', function() {
+                const sortBy = $(this).val();
+                const container = $('.row').eq(4); // Container chứa danh sách danh mục
+                const cards = container.find('.col-xl-4, .col-lg-4, .col-md-6, .col-sm-12, .col-12').get();
+                
+                cards.sort(function(a, b) {
+                    const aName = $(a).find('.card-title').text().toLowerCase();
+                    const bName = $(b).find('.card-title').text().toLowerCase();
+                    
+                    switch(sortBy) {
+                        case 'name-asc':
+                            return aName.localeCompare(bName);
+                        case 'name-desc':
+                            return bName.localeCompare(aName);
+                        case 'newest':
+                            // Giả sử ID có thể dùng để sắp xếp theo thời gian tạo
+                            return $(b).find('.card-text').text().localeCompare($(a).find('.card-text').text());
+                        case 'oldest':
+                            return $(a).find('.card-text').text().localeCompare($(b).find('.card-text').text());
+                        default:
+                            return 0;
+                    }
+                });
+                
+                $.each(cards, function(index, card) {
+                    container.append(card);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
