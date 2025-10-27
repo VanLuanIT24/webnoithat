@@ -1,0 +1,147 @@
+<%--
+  Trang đặt hàng (Order/Checkout)
+
+  1. Giao diện nên có:
+    - Thông tin sản phẩm trong đơn hàng.
+    - Form nhập thông tin giao hàng: tên, địa chỉ, số điện thoại, email.
+    - Chọn phương thức thanh toán.
+    - Nút xác nhận đặt hàng.
+
+  2. Các hàm backend có thể sử dụng:
+    - Đặt hàng: orderController.createOrder hoặc route POST /order
+    - Lấy thông tin giỏ hàng: cartController.getCart hoặc route GET /cart
+
+  3. Cách lấy dữ liệu:
+    - Lấy dữ liệu giỏ hàng, gửi form đặt hàng tới API để tạo đơn hàng.
+--%>
+// app.js 
+const express = require("express");
+const app = express();
+const path = require("path");
+const index = require('./routes/index.router');
+const admin = require("./routes/admin.route");
+const product = require("./routes/product.route");
+const categories = require("./routes/categories.route");
+const shipping = require('./routes/shipping.route');
+const support = require('./routes/support.route');
+const about = require('./routes/about.route');
+const PORT = 3000;
+const flash = require('connect-flash');
+const mongoose = require("mongoose");
+// Passport Config
+const adminModel = require('./models/admin');
+const customer = require('./models/customers');
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+
+app.use(
+  session({
+    secret: "thesecret",
+    saveUninitialized: true,
+    resave: false,
+    cookie: {maxAge: Infinity, path: '/'}
+  })
+);
+app.use(flash());
+passport.use(
+  'admin-local',
+  new LocalStrategy(function (username, password, done) {
+    adminModel.findOne(
+      { 'loginInformation.userName': username },
+      function (err, user) {
+        if (err) {
+          return done(err);
+        }
+        if (!user) {
+          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
+        }
+        if (user.loginInformation.password !== password) {
+          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
+        } 
+        return done(null, user, {message: 'Đăng nhập thành công!'});
+      }
+    );
+  })
+);
+passport.use(
+  'user-local',
+  new LocalStrategy(function (username, password, done) {
+    customer.findOne(
+      { 'loginInformation.userName': username },
+      function (err, user) {
+        if (err) {
+          return done(err);
+        }
+        if (!user) {
+          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
+        }
+        if (user.loginInformation.password !== password) {
+          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
+        } 
+        return done(null, user, {message: 'Đăng nhập thành công!'});
+      }
+    );
+  })
+);
+
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.serializeUser((user, done) => {
+    return done(null, {username: user.loginInformation.userName, type: user.loginInformation.type});
+});
+passport.deserializeUser((user, done) => {
+  if(user.type == 'Admin') {
+    adminModel.findOne({ 'loginInformation.userName': user.username }, (err, result) => {
+      if (err) return done(err);
+      if (!result) return done(null, false);
+      if (result.loginInformation.userName == user.username) {
+        return done(null, result);
+      }
+    });
+  } else {
+    customer.findOne({ 'loginInformation.userName': user.username }, (err, result) => {
+      if (err) return done(err);
+      if (!result) return done(null, false);
+      if (result.loginInformation.userName == user.username) {
+        return done(null, result);
+      }
+    });
+  }
+  });
+// Mongoose connect
+mongoose
+  .connect('mongodb+srv://luanvo10042004_db_user:Maicodon1@webnoithat.yrwqgxf.mongodb.net/webnoithat?retryWrites=true&w=majority&appName=webnoithat', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("DB Connected!");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+mongoose.set("useFindAndModify", false); 
+mongoose.connection.on("error", (err) => {
+  console.log(err);
+});
+// End mongoose connect
+
+app.use(express.json({ limit: "30mb" }));
+app.use(express.urlencoded({ extended: true, limit: "30mb" }));
+app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "/")));
+
+// Router
+app.use("/", index);
+app.use('/admin', admin);
+app.use("/product", product);
+app.use("/categories", categories);
+app.use('/shipping', shipping);
+app.use('/support', support);
+app.use('/about', about);
+
+app.listen(PORT, () => {
+  console.log(`Server is started at: localhost:${PORT}`);
+});

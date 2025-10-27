@@ -1,0 +1,19 @@
+<%--
+  Trang giỏ hàng (Cart)
+
+  1. Giao diện nên có:
+    - Danh sách sản phẩm trong giỏ (ảnh, tên, giá, số lượng, tổng tiền).
+    - Nút cập nhật số lượng, xóa sản phẩm khỏi giỏ.
+    - Tổng tiền đơn hàng.
+    - Nút chuyển sang thanh toán.
+
+  2. Các hàm backend có thể sử dụng:
+    - Lấy giỏ hàng: cartController.getCart hoặc route GET /cart
+    - Cập nhật/xóa sản phẩm trong giỏ: cartController.updateCart, cartController.removeFromCart hoặc route POST /cart/update, /cart/remove
+    - Đặt hàng: orderController.createOrder hoặc route POST /order
+
+  3. Cách lấy dữ liệu:
+    - Lấy dữ liệu giỏ hàng từ API, truyền vào view để render.
+--%>
+<!-- views/cart.ejs -->
+<!-- đây là trang giỏ hàng của người dùng, nơi họ có thể xem lại các sản phẩm đã thêm vào giỏ hàng, điều chỉnh số lượng hoặc xóa sản phẩm trước khi tiến hành thanh toán -->

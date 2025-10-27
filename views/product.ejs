@@ -1,0 +1,19 @@
+<%--
+  Trang danh sách sản phẩm
+
+  1. Giao diện nên có:
+    - Danh sách sản phẩm (ảnh, tên, giá, mô tả ngắn, nút xem chi tiết).
+    - Bộ lọc theo danh mục, giá, sắp xếp.
+    - Thanh tìm kiếm sản phẩm.
+    - Phân trang nếu nhiều sản phẩm.
+
+  2. Các hàm backend có thể sử dụng:
+    - Lấy danh sách sản phẩm: productController.getAllProducts hoặc route GET /product
+    - Lọc sản phẩm theo danh mục: productController.getProductsByCategory hoặc route GET /product?category=...
+    - Tìm kiếm sản phẩm: productController.searchProducts hoặc route GET /product?search=...
+
+  3. Cách lấy dữ liệu:
+    - Lấy dữ liệu từ các API trên, truyền vào view để render danh sách sản phẩm.
+--%>
+<!-- File: views/product.ejs -->
+<!-- đây là trang sản phẩm, nơi người dùng có thể xem thông tin chi tiết về sản phẩm, hình ảnh, đánh giá và các sản phẩm liên quan -->
