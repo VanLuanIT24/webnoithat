@@ -62,7 +62,7 @@ pipeline {
         success {
             sh """
                 echo "🎉 DEPLOY THÀNH CÔNG!"
-                echo "🌐 Ứng dụng của bạn đang chạy tại: https://webnoithat.onrender.com"
+                echo "🌐 Ứng dụng của bạn đang chạy tại: https://webnoithat-85ih.onrender.com/admin/login"
             """
         }
     }
