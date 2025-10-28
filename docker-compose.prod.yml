@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   webnoithat:
-    image: XiaoYingLiu/webnoithat:latest
+    image: vovanluan2953/webnoithat:latest
     container_name: webnoithat-app
     restart: always
     ports:
