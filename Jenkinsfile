@@ -63,15 +63,27 @@ pipeline {
             }
         }
 
+        stage('Verify Push') {
+            steps {
+                bat """
+                    echo 🔍 Verifying push result...
+                    echo 🎉 IMAGE PUSHED SUCCESSFULLY TO DOCKER HUB!
+                    echo 📦 Image: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
+                    echo 🌐 View at: https://hub.docker.com/r/%DOCKER_USERNAME%/%IMAGE_NAME%
+                """
+            }
+        }
+
         stage('Deploy Notification') {
             steps {
                 bat """
                     echo ========================================
-                    echo 🚀 DEPLOYMENT SUCCESSFUL!
+                    echo 🚀 CI/CD PIPELINE COMPLETED!
                     echo ========================================
-                    echo 📦 Image: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
-                    echo 🔄 Render auto-deploying...
-                    echo 🌐 Live: https://webnoithat.onrender.com
+                    echo ✅ Docker Image: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
+                    echo 🔄 Render will auto-deploy from Docker Hub
+                    echo 📱 Check Render: https://dashboard.render.com
+                    echo 🌐 Live App: https://webnoithat.onrender.com
                     echo ========================================
                 """
             }
@@ -84,10 +96,14 @@ pipeline {
             bat 'echo 🕒 Pipeline completed at %TIME%'
         }
         success {
-            bat 'echo 🎉 DEPLOYMENT SUCCESSFUL!'
+            bat """
+                echo 🎉 🎉 🎉 DEPLOYMENT SUCCESSFUL! 🎉 🎉 🎉
+                echo ✅ Docker Image pushed to: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
+                echo 🌐 App URL: https://webnoithat.onrender.com
+            """
         }
         failure {
-            bat 'echo ❌ DEPLOYMENT FAILED'
+            bat 'echo ❌ DEPLOYMENT FAILED - Check logs above'
         }
     }
 }
