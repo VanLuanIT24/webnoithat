@@ -6,31 +6,34 @@ pipeline {
     }
     
     triggers {
-        pollSCM('H/5 * * * *')  // Kiểm tra mỗi 5 phút
+        pollSCM('H/5 * * * *')
     }
     
     stages {
         stage('Checkout') {
             steps {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/VanLuanIT24/webnoithat.git',
-                        credentialsId: 'github-pat'
-                    ]]
-                ])
+                checkout scm
+                bat 'echo ✅ Repository checked out'
+            }
+        }
+
+        stage('Clean Docker Cache') {
+            steps {
+                bat """
+                    echo 🧹 Cleaning Docker cache...
+                    docker system prune -f || echo "No need to clean"
+                    docker rmi %DOCKER_USERNAME%/%IMAGE_NAME%:latest 2>nul || echo "Image not found, continuing..."
+                """
             }
         }
 
         stage('Docker Build') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-cred',
-                    usernameVariable: 'DOCKER_USER', 
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat "docker build -t ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest ."
-                }
+                bat """
+                    echo 🏗️ Building Docker image...
+                    docker build --no-cache -t %DOCKER_USERNAME%/%IMAGE_NAME%:latest .
+                    echo ✅ Docker build completed
+                """
             }
         }
 
@@ -41,24 +44,35 @@ pipeline {
                     usernameVariable: 'DOCKER_USER', 
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                    bat """
+                        echo 🔐 Logging into Docker Hub...
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        echo ✅ Login exit code: %ERRORLEVEL%
+                    """
                 }
             }
         }
 
         stage('Push Docker Hub') {
             steps {
-                bat "docker push ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest"
+                bat """
+                    echo 📤 Pushing image to Docker Hub...
+                    docker push %DOCKER_USERNAME%/%IMAGE_NAME%:latest
+                    echo ✅ Image pushed successfully!
+                """
             }
         }
 
         stage('Deploy Notification') {
             steps {
                 bat """
-                    echo ✅ Docker Image đã được push lên Docker Hub
-                    echo 🔄 Render sẽ tự động deploy từ image mới...
-                    echo 📱 Kiểm tra tiến trình tại: https://dashboard.render.com
-                    echo 🌐 Ứng dụng: https://webnoithat.onrender.com
+                    echo ========================================
+                    echo 🚀 DEPLOYMENT SUCCESSFUL!
+                    echo ========================================
+                    echo 📦 Image: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
+                    echo 🔄 Render auto-deploying...
+                    echo 🌐 Live: https://webnoithat.onrender.com
+                    echo ========================================
                 """
             }
         }
@@ -66,14 +80,14 @@ pipeline {
     
     post {
         always {
-            bat "docker logout"
-            bat "echo Pipeline completed at %DATE% %TIME%"
+            bat 'docker logout || echo "Already logged out"'
+            bat 'echo 🕒 Pipeline completed at %TIME%'
         }
         success {
-            bat "echo 🎉 DEPLOYMENT SUCCESSFUL!"
+            bat 'echo 🎉 DEPLOYMENT SUCCESSFUL!'
         }
         failure {
-            bat "echo ❌ DEPLOYMENT FAILED - Check logs above"
+            bat 'echo ❌ DEPLOYMENT FAILED'
         }
     }
 }
