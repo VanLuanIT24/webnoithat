@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   webnoithat:
-    image: your-dockerhub-username/webnoithat:latest
+    image: XiaoYingLiu/webnoithat:latest
     container_name: webnoithat-app
     restart: always
     ports:
