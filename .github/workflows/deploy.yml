@@ -1,0 +1,27 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build and push to Docker Hub
+      uses: docker/build-push-action@v4
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: XiaoYingLiu/webnoithat
+        tags: latest
+        push: true
+
+    - name: Trigger Render Deploy
+      run: |
+        echo "🚀 Docker image pushed! Render sẽ tự động deploy..."
+        echo "📱 Check deploy status: https://dashboard.render.com"
