@@ -29,30 +29,36 @@ pipeline {
                     usernameVariable: 'DOCKER_USER', 
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh "docker build -t ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest ."
+                    bat "docker build -t ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest ."
                 }
             }
         }
 
-        stage('Push Docker Hub') {
+        stage('Docker Login') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-cred',
                     usernameVariable: 'DOCKER_USER', 
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                    sh "docker push ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest"
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
                 }
             }
         }
 
-        stage('Trigger Render Deploy') {
+        stage('Push Docker Hub') {
             steps {
-                sh """
-                    echo "✅ Docker Image đã được push lên Docker Hub"
-                    echo "🔄 Render sẽ tự động deploy từ image mới..."
-                    echo "📱 Kiểm tra tiến trình tại: https://dashboard.render.com"
+                bat "docker push ${env.DOCKER_USERNAME}/${env.IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Deploy Notification') {
+            steps {
+                bat """
+                    echo ✅ Docker Image đã được push lên Docker Hub
+                    echo 🔄 Render sẽ tự động deploy từ image mới...
+                    echo 📱 Kiểm tra tiến trình tại: https://dashboard.render.com
+                    echo 🌐 Ứng dụng: https://webnoithat.onrender.com
                 """
             }
         }
@@ -60,13 +66,14 @@ pipeline {
     
     post {
         always {
-            sh 'docker logout'
+            bat "docker logout"
+            bat "echo Pipeline completed at %DATE% %TIME%"
         }
         success {
-            sh """
-                echo "🎉 DEPLOY THÀNH CÔNG!"
-                echo "🌐 Ứng dụng của bạn đang chạy tại: https://webnoithat.onrender.com"
-            """
+            bat "echo 🎉 DEPLOYMENT SUCCESSFUL!"
+        }
+        failure {
+            bat "echo ❌ DEPLOYMENT FAILED - Check logs above"
         }
     }
 }
