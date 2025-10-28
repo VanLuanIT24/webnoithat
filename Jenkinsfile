@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_USERNAME = "XiaoYingLiu"
+        DOCKER_USERNAME = "xiaoyingliu"
         IMAGE_NAME = "webnoithat"
     }
     
