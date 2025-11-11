@@ -82,8 +82,8 @@ pipeline {
                     echo ========================================
                     echo ✅ Docker Image: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
                     echo 🔄 Render will auto-deploy from Docker Hub
-                    echo 📱 Check Render: https://dashboard.render.com
-                    echo 🌐 Live App: https://webnoithat.onrender.com
+                    echo 📱 Check Render: https://dashboard.render.com/web/srv-d4021hfdiees73agpon0
+                    echo 🌐 Live App: https://webnoithat-85ih.onrender.com
                     echo ========================================
                 """
             }
@@ -99,7 +99,7 @@ pipeline {
             bat """
                 echo 🎉 🎉 🎉 DEPLOYMENT SUCCESSFUL! 🎉 🎉 🎉
                 echo ✅ Docker Image pushed to: %DOCKER_USERNAME%/%IMAGE_NAME%:latest
-                echo 🌐 App URL: https://webnoithat.onrender.com
+                echo 🌐 App URL: https://webnoithat-85ih.onrender.com
             """
         }
         failure {
