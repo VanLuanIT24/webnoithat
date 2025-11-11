@@ -26,6 +26,7 @@ router.get('/favorite', indexController.getFavoritePage);
 router.get('/favorite/page/:page', indexController.getFavoriteAtPage);
 router.get('/product/favorite/delete/:id', indexController.getDeleteFavorite);
 router.get('/product/favorite/:id', indexController.getAddFavorite);
+router.post('/product/add-to-cart-single/:id', indexController.getAddToCartSingle);
 router.post('/checkout/bills', indexController.postCheckout)
 router.get('/checkout', indexController.getCheckoutPage);
 router.get('/search', indexController.search);
