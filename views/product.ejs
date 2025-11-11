@@ -1,19 +1,2361 @@
-<%--
-  Trang danh sách sản phẩm
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Sản Phẩm - AMADO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --accent-color: #45b7d1;
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --gray-color: #6c757d;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --border-radius: 12px;
+            --box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: var(--dark-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Header Styles */
+        .main-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+        
+        .main-header.scrolled {
+            padding: 10px 0;
+            background: rgba(255, 255, 255, 0.98);
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 32px;
+        }
+        
+        .search-form {
+            position: relative;
+        }
+        
+        .search-input {
+            border-radius: 30px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: var(--transition);
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 15px rgba(255, 107, 107, 0.2);
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .search-btn:hover {
+            background: var(--accent-color);
+            transform: rotate(15deg);
+        }
+        
+        .user-actions .btn {
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .nav-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nav-icon {
+            position: relative;
+            color: var(--dark-color);
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+        
+        .nav-icon:hover {
+            color: var(--primary-color);
+        }
+        
+        .nav-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* User Dropdown */
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 30px;
+            transition: var(--transition);
+        }
+        
+        .user-info:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+        
+        .user-name {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 10px 0;
+        }
+        
+        .dropdown-item {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .dropdown-divider {
+            margin: 8px 0;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--dark-color);
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb-nav {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .breadcrumb {
+            margin-bottom: 0;
+        }
+        
+        .breadcrumb-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .breadcrumb-item a:hover {
+            color: var(--accent-color);
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--gray-color);
+        }
+        
+        /* Page Title */
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .page-subtitle {
+            color: var(--gray-color);
+            margin-bottom: 30px;
+        }
+        
+        /* Filter & Sort Section */
+        .filter-sort-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .filter-toggle {
+            display: none;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+        
+        .filter-toggle:hover {
+            background: var(--accent-color);
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            justify-content: between;
+        }
+        
+        .filter-title i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .filter-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .filter-option input {
+            margin-right: 10px;
+        }
+        
+        .filter-option label {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .filter-option label:hover {
+            color: var(--primary-color);
+        }
+        
+        .price-range {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .price-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .price-input {
+            flex: 1;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .price-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .sort-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .sort-select {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+        
+        .view-options {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-btn {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .view-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .view-btn:hover:not(.active) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .product-image-container {
+            position: relative;
+            overflow: hidden;
+            height: 220px;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        
+        .product-badges {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-discount {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .badge-new {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .badge-out-of-stock {
+            background: var(--gray-color);
+            color: white;
+        }
+        
+        .product-actions-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .product-card:hover .product-actions-overlay {
+            opacity: 1;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .quick-action-btn {
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .quick-action-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .product-info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .product-description {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .product-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .rating-stars {
+            color: var(--warning-color);
+            margin-right: 8px;
+        }
+        
+        .rating-count {
+            color: var(--gray-color);
+            font-size: 0.85rem;
+        }
+        
+        .product-price {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .current-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+        
+        .original-price {
+            font-size: 1rem;
+            color: var(--gray-color);
+            text-decoration: line-through;
+        }
+        
+        .product-stock {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .stock-text {
+            margin-left: 5px;
+        }
+        
+        .stock-high {
+            color: var(--success-color);
+        }
+        
+        .stock-medium {
+            color: var(--warning-color);
+        }
+        
+        .stock-low {
+            color: var(--warning-color);
+        }
+        
+        .stock-none {
+            color: var(--danger-color);
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        
+        .btn-add-to-cart {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 15px;
+            font-weight: 500;
+            flex-grow: 1;
+            transition: var(--transition);
+        }
+        
+        .btn-add-to-cart:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+        
+        .btn-add-to-cart:disabled {
+            background: var(--gray-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-favorite {
+            background: transparent;
+            border: 1px solid var(--gray-color);
+            color: var(--gray-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .btn-favorite:hover {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .btn-favorite.active {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+        
+        /* Products List View */
+        .products-list .product-card {
+            flex-direction: row;
+            height: auto;
+        }
+        
+        .products-list .product-image-container {
+            width: 250px;
+            height: 200px;
+            flex-shrink: 0;
+        }
+        
+        .products-list .product-info {
+            padding: 25px;
+        }
+        
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .page-item .page-link {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--dark-color);
+            transition: var(--transition);
+        }
+        
+        .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .page-item:not(.active) .page-link:hover {
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--primary-color);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        
+        .sidebar-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        /* Newsletter Section */
+        .newsletter-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            padding: 60px 0;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 60px;
+        }
+        
+        .newsletter-section:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,138.7C960,139,1056,181,1152,181.3C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .newsletter-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .newsletter-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .newsletter-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .newsletter-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .newsletter-input {
+            border: none;
+            padding: 15px 20px;
+            width: 70%;
+            outline: none;
+        }
+        
+        .newsletter-btn {
+            background: var(--dark-color);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-weight: 600;
+            width: 30%;
+            transition: var(--transition);
+        }
+        
+        .newsletter-btn:hover {
+            background: #1a252f;
+        }
+        
+        /* Footer */
+        .main-footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer-description {
+            color: #b0b7c3;
+            margin-bottom: 20px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: var(--transition);
+        }
+        
+        .social-link:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+        
+        .footer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .footer-title:after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 3px;
+            background: var(--primary-color);
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: #b0b7c3;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+        
+        .contact-info {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .contact-info i {
+            margin-right: 10px;
+            color: var(--primary-color);
+            margin-top: 3px;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #b0b7c3;
+        }
+        
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+            transition: var(--transition);
+            opacity: 0;
+            visibility: hidden;
+            z-index: 999;
+        }
+        
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            background: var(--accent-color);
+            transform: translateY(-5px);
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Notification */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .nav-icons {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .filter-toggle {
+                display: inline-flex;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 300px;
+                height: 100vh;
+                z-index: 1100;
+                overflow-y: auto;
+                transition: var(--transition);
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1099;
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition);
+            }
+            
+            .sidebar-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .products-list .product-card {
+                flex-direction: column;
+            }
+            
+            .products-list .product-image-container {
+                width: 100%;
+                height: 220px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 15px;
+            }
+            
+            .newsletter-input {
+                width: 100%;
+                border-radius: 30px;
+                margin-bottom: 15px;
+            }
+            
+            .newsletter-btn {
+                width: 100%;
+                border-radius: 30px;
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+                border-radius: 30px;
+            }
+            
+            .user-name {
+                display: none;
+            }
+            
+            .filter-sort-section {
+                flex-direction: column;
+            }
+            
+            .sort-options, .view-options {
+                width: 100%;
+                margin-top: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-2 col-md-3 col-6">
+                    <a href="/" class="logo">
+                        <i class="fas fa-gem"></i>
+                        AMADO
+                    </a>
+                </div>
+                <div class="col-lg-6 col-md-5 d-none d-md-block">
+                    <form class="search-form" action="/search" method="GET">
+                        <input type="text" class="search-input" name="search" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-lg-4 col-md-4 col-6 text-end">
+                    <div class="user-actions d-flex justify-content-end align-items-center">
+                        <div class="nav-icons d-none d-lg-flex">
+                            <a href="/wishlist" class="nav-icon">
+                                <i class="fas fa-heart"></i>
+                                <span class="nav-badge">3</span>
+                            </a>
+                            <a href="/cart" class="nav-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="nav-badge">5</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Phần hiển thị thông tin người dùng đã đăng nhập -->
+                        <% if (customer) { %>
+                            <div class="user-dropdown ms-3">
+                                <div class="user-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <% if (customer.avatar) { %>
+                                        <img src="<%= customer.avatar %>" alt="Avatar" class="user-avatar">
+                                    <% } else { %>
+                                        <div class="user-avatar bg-primary d-flex align-items-center justify-content-center text-white fw-bold">
+                                            <%= customer.fullNameCustomer.firstName.charAt(0) %><%= customer.fullNameCustomer.lastName.charAt(0) %>
+                                        </div>
+                                    <% } %>
+                                    <span class="user-name d-none d-md-inline">
+                                        <%= customer.fullNameCustomer.firstName %> <%= customer.fullNameCustomer.lastName %>
+                                    </span>
+                                    <i class="fas fa-chevron-down ms-1 text-muted"></i>
+                                </div>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Tài khoản</a></li>
+                                    <li><a class="dropdown-item" href="/orders"><i class="fas fa-box me-2"></i>Đơn hàng</a></li>
+                                    <li><a class="dropdown-item" href="/wishlist"><i class="fas fa-heart me-2"></i>Yêu thích</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        <% } else { %>
+                            <!-- Phần hiển thị khi chưa đăng nhập -->
+                            <div class="d-flex gap-2">
+                                <a href="/login" class="btn btn-outline-primary">Đăng nhập</a>
+                                <a href="/sign-up" class="btn btn-primary">Đăng ký</a>
+                            </div>
+                        <% } %>
+                        
+                        <button class="mobile-menu-btn ms-3 d-md-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Search -->
+            <div class="row mt-3 d-md-none">
+                <div class="col-12">
+                    <form class="search-form" action="/search" method="GET">
+                        <input type="text" class="search-input" name="search" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  1. Giao diện nên có:
-    - Danh sách sản phẩm (ảnh, tên, giá, mô tả ngắn, nút xem chi tiết).
-    - Bộ lọc theo danh mục, giá, sắp xếp.
-    - Thanh tìm kiếm sản phẩm.
-    - Phân trang nếu nhiều sản phẩm.
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
+                </ol>
+            </nav>
+        </div>
+    </nav>
 
-  2. Các hàm backend có thể sử dụng:
-    - Lấy danh sách sản phẩm: productController.getAllProducts hoặc route GET /product
-    - Lọc sản phẩm theo danh mục: productController.getProductsByCategory hoặc route GET /product?category=...
-    - Tìm kiếm sản phẩm: productController.searchProducts hoặc route GET /product?search=...
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3">
+                    <button class="filter-toggle w-100 mb-4 d-lg-none">
+                        <i class="fas fa-filter me-2"></i> Bộ lọc
+                    </button>
+                    
+                    <div class="sidebar-overlay"></div>
+                    
+                    <div class="sidebar">
+                        <div class="d-flex justify-content-between align-items-center mb-4 d-lg-none">
+                            <h3 class="sidebar-title mb-0">Bộ lọc</h3>
+                            <button class="btn-close sidebar-close"></button>
+                        </div>
+                        
+                        <!-- Categories Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">
+                                <i class="fas fa-list"></i> Danh mục
+                            </h4>
+                            <div class="filter-options">
+                                <% if (types && types.length > 0) { %>
+                                    <% types.forEach(type => { %>
+                                        <% if (type.status) { %>
+                                            <div class="filter-option">
+                                                <input type="checkbox" id="category-<%= type._id %>" class="category-filter" data-category="<%= type._id %>">
+                                                <label for="category-<%= type._id %>"><%= type.typeName %></label>
+                                            </div>
+                                        <% } %>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p class="text-muted small">Không có danh mục nào</p>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">
+                                <i class="fas fa-tag"></i> Khoảng giá
+                            </h4>
+                            <div class="price-range">
+                                <div class="price-inputs">
+                                    <input type="number" class="form-control price-input" id="min-price" placeholder="Từ" min="0">
+                                    <input type="number" class="form-control price-input" id="max-price" placeholder="Đến" min="0">
+                                </div>
+                                <input type="range" class="form-range price-slider" id="price-range" min="0" max="10000000" step="100000">
+                                <div class="d-flex justify-content-between">
+                                    <small>0₫</small>
+                                    <small>10.000.000₫</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Brand Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">
+                                <i class="fas fa-copyright"></i> Thương hiệu
+                            </h4>
+                            <div class="filter-options">
+                                <% if (suppliers && suppliers.length > 0) { %>
+                                    <% suppliers.forEach(supplier => { %>
+                                        <% if (supplier.status) { %>
+                                            <div class="filter-option">
+                                                <input type="checkbox" id="brand-<%= supplier._id %>" class="brand-filter" data-brand="<%= supplier._id %>">
+                                                <label for="brand-<%= supplier._id %>"><%= supplier.supplierName %></label>
+                                            </div>
+                                        <% } %>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p class="text-muted small">Không có thương hiệu nào</p>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <!-- Rating Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">
+                                <i class="fas fa-star"></i> Đánh giá
+                            </h4>
+                            <div class="filter-options">
+                                <div class="filter-option">
+                                    <input type="radio" id="rating-5" name="rating" class="rating-filter" value="5">
+                                    <label for="rating-5">
+                                        <span class="rating-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </span>
+                                        <span class="ms-2">Trở lên</span>
+                                    </label>
+                                </div>
+                                <div class="filter-option">
+                                    <input type="radio" id="rating-4" name="rating" class="rating-filter" value="4">
+                                    <label for="rating-4">
+                                        <span class="rating-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </span>
+                                        <span class="ms-2">Trở lên</span>
+                                    </label>
+                                </div>
+                                <div class="filter-option">
+                                    <input type="radio" id="rating-3" name="rating" class="rating-filter" value="3">
+                                    <label for="rating-3">
+                                        <span class="rating-stars">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                            <i class="far fa-star"></i>
+                                        </span>
+                                        <span class="ms-2">Trở lên</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Availability Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">
+                                <i class="fas fa-box"></i> Tình trạng
+                            </h4>
+                            <div class="filter-options">
+                                <div class="filter-option">
+                                    <input type="checkbox" id="in-stock" class="availability-filter" value="in-stock">
+                                    <label for="in-stock">Còn hàng</label>
+                                </div>
+                                <div class="filter-option">
+                                    <input type="checkbox" id="out-of-stock" class="availability-filter" value="out-of-stock">
+                                    <label for="out-of-stock">Hết hàng</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Actions -->
+                        <div class="filter-group">
+                            <button class="btn btn-primary w-100 mb-2" id="apply-filters">Áp dụng bộ lọc</button>
+                            <button class="btn btn-outline-secondary w-100" id="reset-filters">Đặt lại bộ lọc</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Products Section -->
+                <div class="col-lg-9">
+                    <div class="page-header mb-4">
+                        <h1 class="page-title">Tất cả sản phẩm</h1>
+                        <p class="page-subtitle">Khám phá <span id="product-count"><%= data.length %></span> sản phẩm tuyệt vời</p>
+                    </div>
+                    
+                    <!-- Filter & Sort Bar -->
+                    <div class="filter-sort-section d-flex flex-wrap justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Sắp xếp theo:</span>
+                            <select class="sort-select">
+                                <option value="default">Mặc định</option>
+                                <option value="price-asc">Giá: Thấp đến Cao</option>
+                                <option value="price-desc">Giá: Cao đến Thấp</option>
+                                <option value="name-asc">Tên: A-Z</option>
+                                <option value="name-desc">Tên: Z-A</option>
+                                <option value="rating">Đánh giá cao nhất</option>
+                                <option value="newest">Mới nhất</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Hiển thị:</span>
+                            <div class="view-options">
+                                <button class="view-btn active" data-view="grid">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button class="view-btn" data-view="list">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Products Grid/List -->
+                    <div class="products-container">
+                        <div class="products-grid" id="products-view">
+                            <% if (data && data.length > 0) { %>
+                                <% data.forEach(product => { 
+                                    // Tính giá sau giảm giá
+                                    let finalPrice = product.description.price;
+                                    let discountAmount = 0;
+                                    
+                                    if (product.discount && product.discount.type !== 'none') {
+                                        if (product.discount.type === 'percent') {
+                                            discountAmount = (product.description.price * product.discount.value) / 100;
+                                        } else if (product.discount.type === 'fixed') {
+                                            discountAmount = product.discount.value;
+                                        }
+                                        finalPrice = product.description.price - discountAmount;
+                                    }
+                                    
+                                    // Xác định trạng thái tồn kho
+                                    let stock = product.description.stock;
+                                    let stockClass = 'stock-high';
+                                    let stockDisplay = '';
+                                    
+                                    if (stock === 0) {
+                                        stockClass = 'stock-none';
+                                        stockDisplay = 'Hết hàng';
+                                    } else if (stock < 10) {
+                                        stockClass = 'stock-low';
+                                        stockDisplay = `Còn ${stock} ${product.description.unit || 'sản phẩm'}`;
+                                    } else if (stock < 50) {
+                                        stockClass = 'stock-medium';
+                                        stockDisplay = `Còn ${stock} ${product.description.unit || 'sản phẩm'}`;
+                                    } else {
+                                        stockClass = 'stock-high';
+                                        stockDisplay = `Còn ${stock} ${product.description.unit || 'sản phẩm'}`;
+                                    }
+                                %>
+                                    <div class="product-card" data-product-id="<%= product._id %>">
+                                        <div class="product-image-container">
+                                            <% if (product.description.imageList && product.description.imageList.length > 0) { %>
+                                                <img src="<%= product.description.imageList[0] %>" class="product-image" alt="<%= product.productName %>">
+                                            <% } else { %>
+                                                <img src="/images/default-product.jpg" class="product-image" alt="<%= product.productName %>">
+                                            <% } %>
+                                            
+                                            <div class="product-badges">
+                                                <% if (product.discount && product.discount.type !== 'none' && product.discount.value > 0) { %>
+                                                    <span class="badge badge-discount">
+                                                        <% if (product.discount.type === 'percent') { %>
+                                                            -<%= product.discount.value %>%
+                                                        <% } else { %>
+                                                            -<%= new Intl.NumberFormat('vi-VN').format(product.discount.value) %>₫
+                                                        <% } %>
+                                                    </span>
+                                                <% } %>
+                                                
+                                                <% if (product.description.stock === 0) { %>
+                                                    <span class="badge badge-out-of-stock">Hết hàng</span>
+                                                <% } else if (product.description.featured) { %>
+                                                    <span class="badge badge-new">Nổi bật</span>
+                                                <% } %>
+                                            </div>
+                                            
+                                            <div class="product-actions-overlay">
+                                                <div class="quick-actions">
+                                                    <button class="quick-action-btn" data-bs-toggle="tooltip" aria-label="Xem nhanh" data-bs-original-title="Xem nhanh"
+                                                            onclick="window.location.href='/product/<%= product._id %>'">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="quick-action-btn" data-bs-toggle="tooltip" title="So sánh">
+                                                        <i class="fas fa-exchange-alt"></i>
+                                                    </button>
+                                                    <button class="quick-action-btn" data-bs-toggle="tooltip" title="Chia sẻ">
+                                                        <i class="fas fa-share-alt"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="product-info">
+                                            <h3 class="product-name"><%= product.productName %></h3>
+                                            
+                                            <% if (product.description.productDescription) { %>
+                                                <p class="product-description"><%= product.description.productDescription %></p>
+                                            <% } %>
+                                            
+                                            <!-- Rating -->
+                                            <% if (product.rating && product.rating.average > 0) { %>
+                                                <div class="product-rating">
+                                                    <div class="rating-stars">
+                                                        <% for (let i = 1; i <= 5; i++) { %>
+                                                            <% if (i <= Math.floor(product.rating.average)) { %>
+                                                                <i class="fas fa-star"></i>
+                                                            <% } else if (i === Math.ceil(product.rating.average) && product.rating.average % 1 !== 0) { %>
+                                                                <i class="fas fa-star-half-alt"></i>
+                                                            <% } else { %>
+                                                                <i class="far fa-star"></i>
+                                                            <% } %>
+                                                        <% } %>
+                                                    </div>
+                                                    <span class="rating-count">(<%= product.rating.count %>)</span>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <!-- Price -->
+                                            <div class="product-price">
+                                                <span class="current-price"><%= new Intl.NumberFormat('vi-VN').format(finalPrice) %>₫</span>
+                                                <% if (discountAmount > 0) { %>
+                                                    <span class="original-price"><%= new Intl.NumberFormat('vi-VN').format(product.description.price) %>₫</span>
+                                                <% } %>
+                                            </div>
+                                            
+                                            <!-- Stock -->
+                                            <div class="product-stock">
+                                                <i class="fas fa-<%= product.description.stock === 0 ? 'times-circle' : 'check-circle' %> <%= stockClass %>"></i>
+                                                <span class="stock-text <%= stockClass %>">
+                                                    <%= stockDisplay %>
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Actions -->
+                                            <div class="product-actions">
+                                                <% if (customer) { %>
+                                                    <% if (product.description.stock > 0) { %>
+                                                        <button class="btn btn-add-to-cart" data-product-id="<%= product._id %>">
+                                                            <i class="fas fa-cart-plus me-2"></i>Thêm Vào Giỏ
+                                                        </button>
+                                                    <% } else { %>
+                                                        <button class="btn btn-add-to-cart" disabled>
+                                                            <i class="fas fa-cart-plus me-2"></i>Hết Hàng
+                                                        </button>
+                                                    <% } %>
+                                                    <button class="btn btn-favorite" data-product-id="<%= product._id %>">
+                                                        <i class="fas fa-heart"></i>
+                                                    </button>
+                                                <% } else { %>
+                                                    <% if (product.description.stock > 0) { %>
+                                                        <a href="/login" class="btn btn-add-to-cart">
+                                                            <i class="fas fa-cart-plus me-2"></i>Thêm Vào Giỏ
+                                                        </a>
+                                                    <% } else { %>
+                                                        <button class="btn btn-add-to-cart" disabled>
+                                                            <i class="fas fa-cart-plus me-2"></i>Hết Hàng
+                                                        </button>
+                                                    <% } %>
+                                                    <a href="/login" class="btn btn-favorite">
+                                                        <i class="fas fa-heart"></i>
+                                                    </a>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="col-12 text-center py-5">
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">Không tìm thấy sản phẩm nào</h4>
+                                    <p class="text-muted">Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+                                    <a href="/product" class="btn btn-primary">Xem tất cả sản phẩm</a>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                                        <!-- Pagination -->
+                    <div class="pagination-container">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <% 
+                                const totalPages = Math.ceil(totalProducts / itemsPerPage);
+                                const currentPageNum = parseInt(currentPage) || 1;
+                                const maxPagesToShow = 5;
+                                let startPage = Math.max(1, currentPageNum - Math.floor(maxPagesToShow / 2));
+                                let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                                
+                                // Đảm bảo hiển thị đủ số trang
+                                if (endPage - startPage + 1 < maxPagesToShow) {
+                                    startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                                }
+                                %>
+                                
+                                <!-- Nút Previous -->
+                                <% if (currentPageNum > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/product?page=<%= currentPageNum - 1 %>" aria-label="Previous">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                <% } else { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-label="Previous">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </span>
+                                    </li>
+                                <% } %>
+                                
+                                <!-- Hiển thị trang đầu nếu cần -->
+                                <% if (startPage > 1) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/product?page=1">1</a>
+                                    </li>
+                                    <% if (startPage > 2) { %>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    <% } %>
+                                <% } %>
+                                
+                                <!-- Các trang số -->
+                                <% for (let i = startPage; i <= endPage; i++) { %>
+                                    <li class="page-item <%= i === currentPageNum ? 'active' : '' %>">
+                                        <a class="page-link" href="/product?page=<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                                
+                                <!-- Hiển thị trang cuối nếu cần -->
+                                <% if (endPage < totalPages) { %>
+                                    <% if (endPage < totalPages - 1) { %>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    <% } %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/product?page=<%= totalPages %>"><%= totalPages %></a>
+                                    </li>
+                                <% } %>
+                                
+                                <!-- Nút Next -->
+                                <% if (currentPageNum < totalPages) { %>
+                                    <li class="page-item">
+                                        <a class="page-link" href="/product?page=<%= currentPageNum + 1 %>" aria-label="Next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                <% } else { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-label="Next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </span>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </nav>
+                        
+                        <!-- Hiển thị thông tin trang -->
+                        <div class="text-muted text-center mt-2">
+                            Hiển thị <%= Math.min((currentPageNum - 1) * itemsPerPage + 1, totalProducts) %> - 
+                            <%= Math.min(currentPageNum * itemsPerPage, totalProducts) %> 
+                            của <%= totalProducts %> sản phẩm
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-  3. Cách lấy dữ liệu:
-    - Lấy dữ liệu từ các API trên, truyền vào view để render danh sách sản phẩm.
---%>
-<!-- File: views/product.ejs -->
-<!-- đây là trang sản phẩm, nơi người dùng có thể xem thông tin chi tiết về sản phẩm, hình ảnh, đánh giá và các sản phẩm liên quan -->
+    <!-- Newsletter Section -->
+    <section class="newsletter-section">
+        <div class="container">
+            <div class="newsletter-content">
+                <h2 class="newsletter-title">Đăng Ký Nhận Tin</h2>
+                <p class="newsletter-subtitle">Nhận thông tin về sản phẩm mới, khuyến mãi đặc biệt và nhiều ưu đãi hấp dẫn khác!</p>
+                <form class="newsletter-form">
+                    <input type="email" class="form-control newsletter-input" placeholder="Nhập email của bạn..." required>
+                    <button type="submit" class="btn newsletter-btn">Đăng Ký</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href="/" class="footer-logo">
+                        <i class="fas fa-gem me-2"></i>AMADO
+                    </a>
+                    <p class="footer-description">AMADO - Địa chỉ mua sắm trực tuyến đáng tin cậy với hàng ngàn sản phẩm chất lượng. Chúng tôi cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h4 class="footer-title">Liên Kết</h4>
+                    <ul class="footer-links">
+                        <li><a href="/">Trang Chủ</a></li>
+                        <li><a href="/product">Sản Phẩm</a></li>
+                        <li><a href="/about">Về Chúng Tôi</a></li>
+                        <li><a href="/support">Hỗ Trợ</a></li>
+                        <li><a href="/shipping">Phí Vận Chuyển</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h4 class="footer-title">Chính Sách</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Chính Sách Bảo Mật</a></li>
+                        <li><a href="#">Điều Khoản Sử Dụng</a></li>
+                        <li><a href="#">Chính Sách Đổi Trả</a></li>
+                        <li><a href="#">Chính Sách Vận Chuyển</a></li>
+                        <li><a href="#">Chính Sách Thanh Toán</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h4 class="footer-title">Liên Hệ</h4>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>123 Đường ABC, Quận XYZ, TP. Hà Nội, Việt Nam</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>0123 456 789</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>info@amado.com</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Thứ 2 - Chủ Nhật: 8:00 - 22:00</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 AMADO. Tất cả các quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+        <script>
+            // Pass server-side variables to JavaScript
+            const serverData = {
+                message: '<%= typeof message !== "undefined" ? message : "" %>',
+                selected: '<%= typeof selected !== "undefined" ? selected : "" %>',
+                supplierFilter: '<%= typeof supplierFilter !== "undefined" ? supplierFilter : "" %>'
+            };
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                // Hiển thị thông báo flash
+                const message = serverData.message;
+            if (message) {
+                const type = message.includes("thành công") ? "success" : "danger";
+                showNotification(message, type);
+            }
+            
+            // Header scroll effect
+            const header = document.querySelector('.main-header');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 100) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+            
+            // Back to top button
+            const backToTopButton = document.querySelector('.back-to-top');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.classList.add('show');
+                } else {
+                    backToTopButton.classList.remove('show');
+                }
+            });
+            
+            backToTopButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Mobile sidebar toggle
+            const filterToggle = document.querySelector('.filter-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.querySelector('.sidebar-overlay');
+            const sidebarClose = document.querySelector('.sidebar-close');
+            
+            if (filterToggle && sidebar) {
+                filterToggle.addEventListener('click', function() {
+                    sidebar.classList.add('show');
+                    sidebarOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                sidebarClose.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                });
+                
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            // View toggle (grid/list)
+            const viewButtons = document.querySelectorAll('.view-btn');
+            const productsView = document.getElementById('products-view');
+            
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const viewType = this.getAttribute('data-view');
+                    
+                    // Update active button
+                    viewButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Change view
+                    if (viewType === 'list') {
+                        productsView.classList.add('products-list');
+                        productsView.classList.remove('products-grid');
+                        localStorage.setItem('productView', 'list');
+                    } else {
+                        productsView.classList.add('products-grid');
+                        productsView.classList.remove('products-list');
+                        localStorage.setItem('productView', 'grid');
+                    }
+                });
+            });
+            
+            // Khôi phục view preference
+            const savedView = localStorage.getItem('productView') || 'grid';
+            if (savedView === 'list') {
+                document.querySelector('[data-view="list"]').click();
+            }
+            
+            // Add to cart functionality
+            const addToCartButtons = document.querySelectorAll('.btn-add-to-cart');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    if (productId && !this.disabled) {
+                        // Simulate adding to cart
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="loading-spinner"></span>';
+                        this.disabled = true;
+                        
+                        // Gửi request đến server
+                        fetch('/cart/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                productId: productId,
+                                quantity: 1
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+                                this.innerHTML = '<i class="fas fa-check me-2"></i>Đã Thêm';
+                                
+                                // Update cart badge
+                                const cartBadge = document.querySelector('.nav-badge');
+                                if (cartBadge) {
+                                    let currentCount = parseInt(cartBadge.textContent);
+                                    cartBadge.textContent = currentCount + 1;
+                                }
+                            } else {
+                                showNotification(data.message || 'Có lỗi xảy ra!', 'danger');
+                                this.innerHTML = originalText;
+                                this.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('Có lỗi xảy ra khi thêm vào giỏ hàng!', 'danger');
+                            this.innerHTML = originalText;
+                            this.disabled = false;
+                        });
+                        
+                        // Reset button after 2 seconds nếu thành công
+                        setTimeout(() => {
+                            if (this.disabled) {
+                                this.innerHTML = originalText;
+                                this.disabled = false;
+                            }
+                        }, 2000);
+                    }
+                });
+            });
+            
+            // Add to favorite functionality
+            const favoriteButtons = document.querySelectorAll('.btn-favorite');
+            favoriteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    if (productId) {
+                        if (this.classList.contains('active')) {
+                            // Remove from favorites
+                            removeFromFavorites(productId, this);
+                        } else {
+                            // Add to favorites
+                            addToFavorites(productId, this);
+                        }
+                    }
+                });
+            });
+            
+            function addToFavorites(productId, button) {
+                fetch('/wishlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId: productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.add('active');
+                        button.innerHTML = '<i class="fas fa-heart"></i>';
+                        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+                        
+                        // Update favorite badge
+                        const favoriteBadge = document.querySelectorAll('.nav-badge')[0];
+                        if (favoriteBadge) {
+                            let currentCount = parseInt(favoriteBadge.textContent);
+                            favoriteBadge.textContent = currentCount + 1;
+                        }
+                    } else {
+                        showNotification(data.message || 'Có lỗi xảy ra!', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Có lỗi xảy ra!', 'danger');
+                });
+            }
+            
+            function removeFromFavorites(productId, button) {
+                fetch('/wishlist/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId: productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.remove('active');
+                        button.innerHTML = '<i class="fas fa-heart"></i>';
+                        showNotification('Đã xóa khỏi danh sách yêu thích!', 'info');
+                        
+                        // Update favorite badge
+                        const favoriteBadge = document.querySelectorAll('.nav-badge')[0];
+                        if (favoriteBadge) {
+                            let currentCount = parseInt(favoriteBadge.textContent);
+                            if (currentCount > 0) {
+                                favoriteBadge.textContent = currentCount - 1;
+                            }
+                        }
+                    } else {
+                        showNotification(data.message || 'Có lỗi xảy ra!', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Có lỗi xảy ra!', 'danger');
+                });
+            }
+            
+            // Quick actions
+            const quickActionButtons = document.querySelectorAll('.quick-action-btn');
+            quickActionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const productCard = this.closest('.product-card');
+                    const productId = productCard.getAttribute('data-product-id');
+                    const action = this.querySelector('i').className;
+                    
+                    if (action.includes('fa-eye')) {
+                        // Quick view
+                        openQuickView(productId);
+                    } else if (action.includes('fa-exchange-alt')) {
+                        showNotification('Tính năng so sánh đang được phát triển!', 'info');
+                    } else if (action.includes('fa-share-alt')) {
+                        shareProduct(productId);
+                    }
+                });
+            });
+            
+            function openQuickView(productId) {
+                // Hiển thị loading
+                showNotification('Đang tải thông tin sản phẩm...', 'info');
+                
+                // Gọi API để lấy thông tin chi tiết sản phẩm
+                fetch(`/product/${productId}/quickview`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showQuickViewModal(data.product);
+                        } else {
+                            showNotification('Không thể tải thông tin sản phẩm!', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Có lỗi xảy ra!', 'danger');
+                    });
+            }
+            
+            function showQuickViewModal(product) {
+                // Tạo modal quick view
+                const modalHtml = `
+                    <div class="modal fade" id="quickViewModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">${product.productName}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <img src="${product.images[0]}" class="img-fluid" alt="${product.productName}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h4>${product.productName}</h4>
+                                            <p class="text-muted">${product.description}</p>
+                                            <div class="price mb-3">
+                                                <span class="h4 text-primary">${formatPrice(product.price)}₫</span>
+                                                ${product.originalPrice ? `<span class="text-muted text-decoration-line-through ms-2">${formatPrice(product.originalPrice)}₫</span>` : ''}
+                                            </div>
+                                            <div class="mb-3">
+                                                <span class="badge bg-${product.inStock ? 'success' : 'danger'}">
+                                                    ${product.inStock ? 'Còn hàng' : 'Hết hàng'}
+                                                </span>
+                                            </div>
+                                            <button class="btn btn-primary btn-lg w-100">Thêm vào giỏ hàng</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Thêm modal vào DOM và hiển thị
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+                modal.show();
+                
+                // Xóa modal khi đóng
+                document.getElementById('quickViewModal').addEventListener('hidden.bs.modal', function () {
+                    this.remove();
+                });
+            }
+            
+            function shareProduct(productId) {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Xem sản phẩm này tại AMADO',
+                        text: 'Khám phá sản phẩm tuyệt vời này!',
+                        url: `${window.location.origin}/product/${productId}`
+                    })
+                    .then(() => showNotification('Chia sẻ thành công!', 'success'))
+                    .catch(error => console.log('Lỗi chia sẻ:', error));
+                } else {
+                    // Fallback cho trình duyệt không hỗ trợ Web Share API
+                    navigator.clipboard.writeText(`${window.location.origin}/product/${productId}`)
+                        .then(() => showNotification('Đã sao chép link sản phẩm!', 'success'))
+                        .catch(err => showNotification('Không thể sao chép link!', 'danger'));
+                }
+            }
+            
+             // Filter functionality - CẬP NHẬT PHẦN NÀY
+        const applyFiltersBtn = document.getElementById('apply-filters');
+        const resetFiltersBtn = document.getElementById('reset-filters');
+            
+            if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', function() {
+                applyFilters();
+            });
+        }
+
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', function() {
+                resetFilters();
+            });
+        }
+
+        function applyFilters() {
+            // Collect filter values từ form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/product/filter'; // Sử dụng route POST hiện có của bạn
+
+            // Lấy danh mục được chọn - CHỈ LẤY 1 CATEGORY (theo logic hiện tại của bạn)
+            const categoryCheckboxes = document.querySelectorAll('.category-filter:checked');
+            if (categoryCheckboxes.length > 0) {
+                // Chỉ lấy category đầu tiên được chọn (theo logic hiện tại của bạn)
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selection';
+                input.value = categoryCheckboxes[0].getAttribute('data-category');
+                form.appendChild(input);
+            }
+
+            // Lấy brand được chọn - CHỈ LẤY 1 BRAND (theo logic hiện tại của bạn)
+            const brandCheckboxes = document.querySelectorAll('.brand-filter:checked');
+            if (brandCheckboxes.length > 0) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'supplier';
+                input.value = brandCheckboxes[0].getAttribute('data-brand');
+                form.appendChild(input);
+            }
+
+            // Lấy khoảng giá - THÊM TÍNH NĂNG MỚI
+            const minPrice = document.getElementById('min-price').value;
+            const maxPrice = document.getElementById('max-price').value;
+            if (minPrice) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'minPrice';
+                input.value = minPrice;
+                form.appendChild(input);
+            }
+            if (maxPrice) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'maxPrice';
+                input.value = maxPrice;
+                form.appendChild(input);
+            }
+
+            // Lấy rating - THÊM TÍNH NĂNG MỚI
+            const ratingFilter = document.querySelector('.rating-filter:checked');
+            if (ratingFilter) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'rating';
+                input.value = ratingFilter.value;
+                form.appendChild(input);
+            }
+
+            // Lấy availability - THÊM TÍNH NĂNG MỚI
+            const inStock = document.getElementById('in-stock').checked;
+            const outOfStock = document.getElementById('out-of-stock').checked;
+            if (inStock && !outOfStock) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'availability';
+                input.value = 'in-stock';
+                form.appendChild(input);
+            } else if (outOfStock && !inStock) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'availability';
+                input.value = 'out-of-stock';
+                form.appendChild(input);
+            }
+
+            // Submit form sau khi thu thập filter
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+    // Sort functionality - CẬP NHẬT PHẦN NÀY
+const sortSelect = document.querySelector('.sort-select');
+if (sortSelect) {
+    // Khôi phục sort option từ session/selected
+    if (serverData.selected || serverData.supplierFilter) {
+        // Nếu đang filter, mặc định sort là 'default'
+        sortSelect.value = 'default';
+    } else {
+        // Có thể thêm logic khôi phục sort từ session nếu cần
+    }
+    
+    sortSelect.addEventListener('change', function() {
+        const sortValue = this.value;
+        
+        // Tạo form để submit POST request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/product/filter';
+        
+        // Thêm các filter hiện tại
+        if (serverData.selected) {
+            const selectionInput = document.createElement('input');
+            selectionInput.type = 'hidden';
+            selectionInput.name = 'selection';
+            selectionInput.value = serverData.selected;
+            form.appendChild(selectionInput);
+        }
+
+        if (serverData.supplierFilter) {
+            const supplierInput = document.createElement('input');
+            supplierInput.type = 'hidden';
+            supplierInput.name = 'supplier';
+            supplierInput.value = serverData.supplierFilter;
+            form.appendChild(supplierInput);
+        }
+
+        // Thêm sort value
+        const sortInput = document.createElement('input');
+        sortInput.type = 'hidden';
+        sortInput.name = 'sort';
+        sortInput.value = sortValue;
+        form.appendChild(sortInput);
+        
+        showNotification(`Đang sắp xếp theo: ${this.options[this.selectedIndex].text}`, 'info');
+        
+        // Submit form
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+
+        function resetFilters() {
+            // Reset all filters
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+
+            document.getElementById('min-price').value = '';
+            document.getElementById('max-price').value = '';
+
+            // Reset sort to default
+            const sortSelect = document.querySelector('.sort-select');
+            if (sortSelect) {
+                sortSelect.value = 'default';
+            }
+        }
+
+        // Khôi phục trạng thái filter từ session
+        function restoreFilterState() {
+            // Lấy selected category từ server
+            if (serverData.selected) {
+                const categoryCheckbox = document.querySelector(`.category-filter[data-category="${serverData.selected}"]`);
+                if (categoryCheckbox) {
+                    categoryCheckbox.checked = true;
+                }
+            }
+
+            // Lấy selected brand từ server  
+            if (serverData.supplierFilter) {
+                const brandCheckbox = document.querySelector(`.brand-filter[data-brand="${serverData.supplierFilter}"]`);
+                if (brandCheckbox) {
+                    brandCheckbox.checked = true;
+                }
+            }
+            // Lấy selected brand từ server  
+            if (serverData.supplierFilter) {
+                const brandCheckbox = document.querySelector(`.brand-filter[data-brand="${serverData.supplierFilter}"]`);
+                if (brandCheckbox) {
+                    brandCheckbox.checked = true;
+                }
+            }
+
+            // Update price displays
+            updatePriceDisplays();
+        }
+
+        // Price range slider với real-time update
+        const priceSlider = document.getElementById('price-range');
+        const minPriceInput = document.getElementById('min-price');
+        const maxPriceInput = document.getElementById('max-price');
+        const minPriceDisplay = document.querySelector('.price-range small:first-child');
+        const maxPriceDisplay = document.querySelector('.price-range small:last-child');
+
+        if (priceSlider && minPriceInput && maxPriceInput) {
+            // Update displays
+            updatePriceDisplays();
+
+            priceSlider.addEventListener('input', function() {
+                const value = this.value;
+                minPriceInput.value = 0;
+                maxPriceInput.value = value;
+                updatePriceDisplays();
+            });
+
+            minPriceInput.addEventListener('input', function() {
+                const minValue = parseInt(this.value) || 0;
+                const maxValue = parseInt(maxPriceInput.value) || 10000000;
+                if (minValue > maxValue) {
+                    maxPriceInput.value = minValue;
+                }
+                priceSlider.value = Math.max(minValue, maxValue);
+                updatePriceDisplays();
+            });
+
+            maxPriceInput.addEventListener('input', function() {
+                const maxValue = parseInt(this.value) || 10000000;
+                const minValue = parseInt(minPriceInput.value) || 0;
+                if (maxValue < minValue) {
+                    minPriceInput.value = maxValue;
+                }
+                priceSlider.value = maxValue;
+                updatePriceDisplays();
+            });
+        }
+
+        function updatePriceDisplays() {
+            if (minPriceDisplay && maxPriceDisplay) {
+                const minValue = parseInt(minPriceInput.value) || 0;
+                const maxValue = parseInt(maxPriceInput.value) || 10000000;
+
+                minPriceDisplay.textContent = formatPrice(minValue) + '₫';
+                maxPriceDisplay.textContent = formatPrice(maxValue) + '₫';
+            }
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN').format(price);
+        }
+        // Gọi hàm khôi phục khi trang load
+        restoreFilterState();
+            
+            // Auto-apply filters khi thay đổi (tuỳ chọn)
+            const filterInputs = document.querySelectorAll('.category-filter, .brand-filter, .rating-filter, .availability-filter');
+            filterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    // Có thể bật auto-apply ở đây nếu muốn
+                    // applyFilters();
+                });
+            });
+            
+            // Newsletter form submission
+            const newsletterForm = document.querySelector('.newsletter-form');
+            if (newsletterForm) {
+                newsletterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const emailInput = this.querySelector('.newsletter-input');
+                    const submitButton = this.querySelector('.newsletter-btn');
+                    
+                    if (emailInput.value) {
+                        submitButton.innerHTML = '<span class="loading-spinner"></span>';
+                        submitButton.disabled = true;
+                        
+                        // Simulate API call
+                        setTimeout(() => {
+                            showNotification('Cảm ơn bạn đã đăng ký nhận tin!', 'success');
+                            emailInput.value = '';
+                            submitButton.innerHTML = 'Đăng Ký';
+                            submitButton.disabled = false;
+                        }, 1500);
+                    }
+                });
+            }
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Lazy loading cho images
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazy');
+                            imageObserver.unobserve(img);
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+        });
+        
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.custom-notification');
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+            
+            const notification = document.createElement('div');
+            notification.className = `custom-notification alert alert-${type} alert-dismissible fade show`;
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    <div>${message}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,2 +1,1563 @@
-<!-- File: views/search.ejs -->
-<!-- đây là trang tìm kiếm, nơi người dùng có thể tìm kiếm các sản phẩm theo từ khóa -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm Kiếm - AMADO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --accent-color: #45b7d1;
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --gray-color: #6c757d;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --border-radius: 16px;
+            --box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: var(--dark-color);
+            line-height: 1.7;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* Header Styles (giữ nguyên từ trang chủ) */
+        .main-header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 18px 0;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(255, 107, 107, 0.1);
+        }
+        
+        .main-header.scrolled {
+            padding: 12px 0;
+            background: rgba(255, 255, 255, 0.995);
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo i {
+            margin-right: 12px;
+            font-size: 36px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .search-form {
+            position: relative;
+        }
+        
+        .search-input {
+            border-radius: 50px;
+            border: 2px solid #e9ecef;
+            padding: 14px 24px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: var(--transition);
+            font-size: 0.95rem;
+            background: #f8f9fa;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.15);
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .search-btn:hover {
+            transform: rotate(15deg) scale(1.05);
+            box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* User Actions (giữ nguyên) */
+        .user-actions .btn {
+            border-radius: 50px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+            transition: var(--transition);
+        }
+        
+        .nav-icons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .nav-icon {
+            position: relative;
+            color: var(--dark-color);
+            font-size: 1.3rem;
+            transition: var(--transition);
+            padding: 8px;
+            border-radius: 50%;
+        }
+        
+        .nav-icon:hover {
+            color: var(--primary-color);
+            background: rgba(255, 107, 107, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .nav-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* User Dropdown */
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 107, 107, 0.1);
+        }
+        
+        .user-info:hover {
+            background: rgba(255, 107, 107, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.95rem;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            border-radius: 16px;
+            padding: 12px 0;
+            margin-top: 12px;
+            border: 1px solid rgba(255, 107, 107, 0.1);
+        }
+        
+        .dropdown-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255, 107, 107, 0.08);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+        
+        .dropdown-divider {
+            margin: 10px 0;
+            opacity: 0.1;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            color: var(--dark-color);
+            transition: var(--transition);
+        }
+        
+        .mobile-menu-btn:hover {
+            color: var(--primary-color);
+            transform: rotate(90deg);
+        }
+        
+        /* Search Results Section */
+        .search-results-section {
+            padding: 80px 0 60px;
+            background: linear-gradient(to bottom, #f9f9f9 0%, #ffffff 100%);
+            min-height: 70vh;
+        }
+        
+        .search-header {
+            background: white;
+            padding: 40px 0;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .search-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark-color);
+            margin-bottom: 16px;
+        }
+        
+        .search-keyword {
+            color: var(--primary-color);
+            background: rgba(255, 107, 107, 0.1);
+            padding: 8px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        .results-count {
+            font-size: 1.1rem;
+            color: var(--gray-color);
+            margin-top: 16px;
+        }
+        
+        .results-count strong {
+            color: var(--primary-color);
+        }
+        
+        /* Filter Sidebar */
+        .filter-sidebar {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 120px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(255, 107, 107, 0.1);
+            color: var(--dark-color);
+        }
+        
+        .filter-group {
+            margin-bottom: 30px;
+        }
+        
+        .filter-group-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--dark-color);
+        }
+        
+        .filter-options {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .filter-option {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-option input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        
+        .filter-option label {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .filter-option label:hover {
+            color: var(--primary-color);
+        }
+        
+        .price-range-inputs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .price-input {
+            flex: 1;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: var(--transition);
+        }
+        
+        .price-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.1);
+        }
+        
+        .apply-filters-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 24px;
+            font-weight: 600;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .apply-filters-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .product-image-container {
+            position: relative;
+            overflow: hidden;
+            height: 260px;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.1);
+        }
+        
+        .product-badges {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2;
+        }
+        
+        .badge {
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .badge-discount {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #ff8a8a 100%);
+            color: white;
+        }
+        
+        .badge-new {
+            background: linear-gradient(135deg, var(--success-color) 0%, #6de6a5 100%);
+            color: white;
+        }
+        
+        .badge-out-of-stock {
+            background: linear-gradient(135deg, var(--gray-color) 0%, #a0a0a0 100%);
+            color: white;
+        }
+        
+        .product-info {
+            padding: 24px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark-color);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+        
+        .product-description {
+            color: var(--gray-color);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+        
+        .product-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .rating-stars {
+            color: var(--warning-color);
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        
+        .rating-count {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        .product-price {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .current-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-right: 12px;
+        }
+        
+        .original-price {
+            font-size: 1.1rem;
+            color: var(--gray-color);
+            text-decoration: line-through;
+        }
+        
+        .product-stock {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .stock-text {
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        
+        .stock-high {
+            color: var(--success-color);
+        }
+        
+        .stock-medium {
+            color: var(--warning-color);
+        }
+        
+        .stock-low {
+            color: var(--warning-color);
+        }
+        
+        .stock-none {
+            color: var(--danger-color);
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+        
+        .btn-add-to-cart {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-weight: 600;
+            flex-grow: 1;
+            transition: var(--transition);
+            box-shadow: 0 6px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-add-to-cart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-add-to-cart:disabled {
+            background: var(--gray-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-favorite {
+            background: transparent;
+            border: 2px solid #e9ecef;
+            color: var(--gray-color);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .btn-favorite:hover {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.2);
+        }
+        
+        .btn-favorite.active {
+            border-color: var(--danger-color);
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .no-results-icon {
+            font-size: 4rem;
+            color: var(--gray-color);
+            margin-bottom: 24px;
+        }
+        
+        .no-results-title {
+            font-size: 1.8rem;
+            color: var(--dark-color);
+            margin-bottom: 16px;
+        }
+        
+        .no-results-text {
+            color: var(--gray-color);
+            margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .suggestions {
+            background: rgba(255, 107, 107, 0.05);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-top: 32px;
+        }
+        
+        .suggestions-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--dark-color);
+        }
+        
+        .suggestion-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .suggestion-item {
+            background: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            border: 1px solid #e9ecef;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .suggestion-item:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Sort and View Options */
+        .results-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .sort-options select {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: white;
+            transition: var(--transition);
+        }
+        
+        .sort-options select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.1);
+        }
+        
+        .view-options {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .view-option {
+            background: transparent;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 10px 16px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .view-option.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .view-option:hover {
+            border-color: var(--primary-color);
+        }
+        
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .page-item {
+            list-style: none;
+        }
+        
+        .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            color: var(--dark-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .page-link:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-color: transparent;
+            color: white;
+        }
+        
+        /* Footer (giữ nguyên từ trang chủ) */
+        .main-footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 80px 0 30px;
+            position: relative;
+        }
+        
+        .main-footer:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        }
+        
+        .footer-logo {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        .footer-description {
+            color: #b0b7c3;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .social-link {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+        
+        .social-link:hover {
+            background: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .footer-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 28px;
+            position: relative;
+        }
+        
+        .footer-title:after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 4px;
+            background: var(--primary-color);
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            border-radius: 2px;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 14px;
+        }
+        
+        .footer-links a {
+            color: #b0b7c3;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-block;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            padding-left: 8px;
+            transform: translateX(5px);
+        }
+        
+        .contact-info {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .contact-info li {
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-color);
+            margin-top: 4px;
+            font-size: 1.1rem;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 40px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #b0b7c3;
+        }
+        
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+            transition: var(--transition);
+            opacity: 0;
+            visibility: hidden;
+            z-index: 999;
+            font-size: 1.2rem;
+        }
+        
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(255,107,107,0.5);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 30px;
+            }
+            
+            .results-options {
+                flex-direction: column;
+                gap: 20px;
+                align-items: stretch;
+            }
+            
+            .nav-icons {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-title {
+                font-size: 2rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+            }
+            
+            .price-range-inputs {
+                flex-direction: column;
+            }
+            
+            .user-name {
+                display: none;
+            }
+            
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-results-section {
+                padding: 60px 0 40px;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Notification */
+        .custom-notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 9999;
+            min-width: 350px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-left: 5px solid;
+            animation: slideInRight 0.5s ease;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header (giữ nguyên từ trang chủ) -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-2 col-md-3 col-6">
+                    <a href="/" class="logo">
+                        <i class="fas fa-gem"></i>
+                        AMADO
+                    </a>
+                </div>
+                <div class="col-lg-6 col-md-5 d-none d-md-block">
+                    <form class="search-form" action="/search" method="GET">
+                        <input type="text" class="search-input" name="search" value="<%= key || '' %>" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-lg-4 col-md-4 col-6 text-end">
+                    <div class="user-actions d-flex justify-content-end align-items-center">
+                        <div class="nav-icons d-none d-lg-flex">
+                            <a href="/wishlist" class="nav-icon">
+                                <i class="fas fa-heart"></i>
+                                <span class="nav-badge">3</span>
+                            </a>
+                            <a href="/cart" class="nav-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="nav-badge">5</span>
+                            </a>
+                        </div>
+                        
+                        <% if (customer) { %>
+                            <div class="user-dropdown ms-3">
+                                <div class="user-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <% if (customer.avatar) { %>
+                                        <img src="<%= customer.avatar %>" alt="Avatar" class="user-avatar">
+                                    <% } else { %>
+                                        <div class="user-avatar bg-primary d-flex align-items-center justify-content-center text-white fw-bold">
+                                            <%= customer.fullNameCustomer.firstName.charAt(0) %><%= customer.fullNameCustomer.lastName.charAt(0) %>
+                                        </div>
+                                    <% } %>
+                                    <span class="user-name d-none d-md-inline">
+                                        <%= customer.fullNameCustomer.firstName %> <%= customer.fullNameCustomer.lastName %>
+                                    </span>
+                                    <i class="fas fa-chevron-down ms-1 text-muted"></i>
+                                </div>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Tài khoản</a></li>
+                                    <li><a class="dropdown-item" href="/orders"><i class="fas fa-box me-2"></i>Đơn hàng</a></li>
+                                    <li><a class="dropdown-item" href="/wishlist"><i class="fas fa-heart me-2"></i>Yêu thích</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        <% } else { %>
+                            <div class="d-flex gap-2">
+                                <a href="/login" class="btn btn-outline-primary">Đăng nhập</a>
+                                <a href="/sign-up" class="btn btn-primary">Đăng ký</a>
+                            </div>
+                        <% } %>
+                        
+                        <button class="mobile-menu-btn ms-3 d-md-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Search -->
+            <div class="row mt-3 d-md-none">
+                <div class="col-12">
+                    <form class="search-form" action="/search" method="GET">
+                        <input type="text" class="search-input" name="search" value="<%= key || '' %>" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Results Section -->
+    <section class="search-results-section">
+        <div class="container">
+            <!-- Search Header -->
+            <div class="search-header">
+                <h1 class="search-title">Kết Quả Tìm Kiếm</h1>
+                <div class="search-keyword">
+                    "<%= key %>"
+                </div>
+                <div class="results-count">
+                    Tìm thấy <strong><%= products ? products.length : 0 %></strong> sản phẩm phù hợp
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Filter Sidebar -->
+                <div class="col-lg-3">
+                    <div class="filter-sidebar">
+                        <h3 class="filter-title">Bộ Lọc</h3>
+                        
+                        <!-- Category Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-group-title">Danh Mục</h4>
+                            <ul class="filter-options">
+                                <li class="filter-option">
+                                    <input type="checkbox" id="category-all" name="category" value="all" checked>
+                                    <label for="category-all">Tất cả danh mục</label>
+                                </li>
+                                <% if (types && types.length > 0) { %>
+                                    <% types.forEach(type => { %>
+                                        <li class="filter-option">
+                                            <input type="checkbox" id="category-<%= type._id %>" name="category" value="<%= type._id %>">
+                                            <label for="category-<%= type._id %>"><%= type.typeName %></label>
+                                        </li>
+                                    <% }); %>
+                                <% } %>
+                            </ul>
+                        </div>
+                        
+                        <!-- Brand Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-group-title">Thương Hiệu</h4>
+                            <ul class="filter-options">
+                                <li class="filter-option">
+                                    <input type="checkbox" id="brand-all" name="brand" value="all" checked>
+                                    <label for="brand-all">Tất cả thương hiệu</label>
+                                </li>
+                                <% if (suppliers && suppliers.length > 0) { %>
+                                    <% suppliers.forEach(supplier => { %>
+                                        <li class="filter-option">
+                                            <input type="checkbox" id="brand-<%= supplier._id %>" name="brand" value="<%= supplier._id %>">
+                                            <label for="brand-<%= supplier._id %>"><%= supplier.supplierName %></label>
+                                        </li>
+                                    <% }); %>
+                                <% } %>
+                            </ul>
+                        </div>
+                        
+                        <!-- Price Range -->
+                        <div class="filter-group">
+                            <h4 class="filter-group-title">Khoảng Giá</h4>
+                            <div class="price-range-inputs">
+                                <input type="number" class="price-input" placeholder="Từ" min="0">
+                                <input type="number" class="price-input" placeholder="Đến" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Rating Filter -->
+                        <div class="filter-group">
+                            <h4 class="filter-group-title">Đánh Giá</h4>
+                            <ul class="filter-options">
+                                <li class="filter-option">
+                                    <input type="checkbox" id="rating-5" name="rating" value="5">
+                                    <label for="rating-5">
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                    </label>
+                                </li>
+                                <li class="filter-option">
+                                    <input type="checkbox" id="rating-4" name="rating" value="4">
+                                    <label for="rating-4">
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="far fa-star text-warning"></i> trở lên
+                                    </label>
+                                </li>
+                                <li class="filter-option">
+                                    <input type="checkbox" id="rating-3" name="rating" value="3">
+                                    <label for="rating-3">
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <i class="far fa-star text-warning"></i>
+                                        <i class="far fa-star text-warning"></i> trở lên
+                                    </label>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <button class="apply-filters-btn">
+                            <i class="fas fa-filter me-2"></i>Áp dụng bộ lọc
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Products Results -->
+                <div class="col-lg-9">
+                    <!-- Sort and View Options -->
+                    <div class="results-options">
+                        <div class="sort-options">
+                            <select class="form-select">
+                                <option value="relevance">Sắp xếp theo: Độ phù hợp</option>
+                                <option value="price-asc">Giá: Thấp đến cao</option>
+                                <option value="price-desc">Giá: Cao đến thấp</option>
+                                <option value="name-asc">Tên: A-Z</option>
+                                <option value="name-desc">Tên: Z-A</option>
+                                <option value="rating">Đánh giá cao nhất</option>
+                                <option value="newest">Mới nhất</option>
+                            </select>
+                        </div>
+                        <div class="view-options">
+                            <button class="view-option active" data-view="grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-option" data-view="list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Products Grid -->
+                    <% if (products && products.length > 0) { %>
+                        <div class="products-grid" id="products-container">
+                            <% products.forEach(product => { %>
+                                <div class="product-card">
+                                    <div class="product-image-container">
+                                        <% if (product.description && product.description.imageList && product.description.imageList.length > 0) { %>
+                                            <img src="<%= product.description.imageList[0] %>" class="product-image" alt="<%= product.productName %>">
+                                        <% } else { %>
+                                            <img src="/images/default-product.jpg" class="product-image" alt="<%= product.productName %>">
+                                        <% } %>
+                                        
+                                        <div class="product-badges">
+                                            <% if (product.discount && product.discount.value > 0) { %>
+                                                <span class="badge badge-discount">-<%= product.discount.value %>%</span>
+                                            <% } %>
+                                            <% if (product.description && product.description.stock === 0) { %>
+                                                <span class="badge badge-out-of-stock">Hết hàng</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="product-info">
+                                        <h3 class="product-name"><%= product.productName %></h3>
+                                        
+                                        <% if (product.description && product.description.productDescription) { %>
+                                            <p class="product-description"><%= product.description.productDescription %></p>
+                                        <% } %>
+                                        
+                                        <% if (product.rating && product.rating.average > 0) { %>
+                                            <div class="product-rating">
+                                                <div class="rating-stars">
+                                                    <% for (let i = 1; i <= 5; i++) { %>
+                                                        <% if (i <= Math.floor(product.rating.average)) { %>
+                                                            <i class="fas fa-star"></i>
+                                                        <% } else if (i === Math.ceil(product.rating.average) && product.rating.average % 1 !== 0) { %>
+                                                            <i class="fas fa-star-half-alt"></i>
+                                                        <% } else { %>
+                                                            <i class="far fa-star"></i>
+                                                        <% } %>
+                                                    <% } %>
+                                                </div>
+                                                <span class="rating-count">(<%= product.rating.count %>)</span>
+                                            </div>
+                                        <% } %>
+                                        
+                                        <div class="product-price">
+                                            <span class="current-price">
+                                                <% if (product.description && product.description.price) { %>
+                                                    <%= new Intl.NumberFormat('vi-VN').format(product.description.price) %>₫
+                                                <% } %>
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="product-stock">
+                                            <% if (product.description && product.description.stock > 0) { %>
+                                                <i class="fas fa-check-circle stock-high"></i>
+                                                <span class="stock-text stock-high">Còn hàng</span>
+                                            <% } else { %>
+                                                <i class="fas fa-times-circle stock-none"></i>
+                                                <span class="stock-text stock-none">Hết hàng</span>
+                                            <% } %>
+                                        </div>
+                                        
+                                        <div class="product-actions">
+                                            <a href="/product/<%= product._id %>" class="btn btn-add-to-cart flex-grow-1">
+                                                <i class="fas fa-eye me-2"></i>Xem chi tiết
+                                            </a>
+                                            <% if (customer) { %>
+                                                <button class="btn btn-favorite" data-product-id="<%= product._id %>">
+                                                    <i class="fas fa-heart"></i>
+                                                </button>
+                                            <% } else { %>
+                                                <a href="/login" class="btn btn-favorite">
+                                                    <i class="fas fa-heart"></i>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <!-- No Results -->
+                        <div class="no-results">
+                            <div class="no-results-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h2 class="no-results-title">Không tìm thấy kết quả phù hợp</h2>
+                            <p class="no-results-text">
+                                Rất tiếc, chúng tôi không tìm thấy sản phẩm nào phù hợp với từ khóa "<strong><%= key %></strong>". 
+                                Vui lòng thử lại với từ khóa khác hoặc duyệt các danh mục sản phẩm của chúng tôi.
+                            </p>
+                            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                                <a href="/" class="btn btn-primary btn-lg">Quay về trang chủ</a>
+                                <a href="/product" class="btn btn-outline-primary btn-lg">Xem tất cả sản phẩm</a>
+                            </div>
+                            
+                            <div class="suggestions">
+                                <h3 class="suggestions-title">Gợi ý tìm kiếm:</h3>
+                                <ul class="suggestion-list">
+                                    <li class="suggestion-item">Điện thoại</li>
+                                    <li class="suggestion-item">Laptop</li>
+                                    <li class="suggestion-item">Tai nghe</li>
+                                    <li class="suggestion-item">Đồng hồ</li>
+                                    <li class="suggestion-item">Phụ kiện</li>
+                                </ul>
+                            </div>
+                        </div>
+                    <% } %>
+                    
+                    <!-- Pagination -->
+                    <% if (products && products.length > 0) { %>
+                        <div class="pagination-container">
+                            <ul class="pagination">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">1</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">2</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">3</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer (giữ nguyên từ trang chủ) -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href="/" class="footer-logo">
+                        <i class="fas fa-gem me-2"></i>AMADO
+                    </a>
+                    <p class="footer-description">AMADO - Địa chỉ mua sắm trực tuyến đáng tin cậy với hàng ngàn sản phẩm chất lượng. Chúng tôi cam kết mang đến trải nghiệm mua sắm tốt nhất cho khách hàng.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h4 class="footer-title">Liên Kết</h4>
+                    <ul class="footer-links">
+                        <li><a href="/">Trang Chủ</a></li>
+                        <li><a href="/product">Sản Phẩm</a></li>
+                        <li><a href="/about">Về Chúng Tôi</a></li>
+                        <li><a href="/support">Hỗ Trợ</a></li>
+                        <li><a href="/shipping">Phí Vận Chuyển</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h4 class="footer-title">Chính Sách</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Chính Sách Bảo Mật</a></li>
+                        <li><a href="#">Điều Khoản Sử Dụng</a></li>
+                        <li><a href="#">Chính Sách Đổi Trả</a></li>
+                        <li><a href="#">Chính Sách Vận Chuyển</a></li>
+                        <li><a href="#">Chính Sách Thanh Toán</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h4 class="footer-title">Liên Hệ</h4>
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>123 Đường ABC, Quận XYZ, TP. Hà Nội, Việt Nam</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>0123 456 789</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>info@amado.com</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>Thứ 2 - Chủ Nhật: 8:00 - 22:00</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 AMADO. Tất cả các quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top">
+        <i class="fas fa-chevron-up"></i>
+    </a>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Header scroll effect
+            const header = document.querySelector('.main-header');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 100) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+            
+            // Back to top button
+            const backToTopButton = document.querySelector('.back-to-top');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopButton.classList.add('show');
+                } else {
+                    backToTopButton.classList.remove('show');
+                }
+            });
+            
+            backToTopButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // View options functionality
+            const viewOptions = document.querySelectorAll('.view-option');
+            const productsContainer = document.getElementById('products-container');
+            
+            viewOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    viewOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.view === 'list') {
+                        productsContainer.classList.add('list-view');
+                    } else {
+                        productsContainer.classList.remove('list-view');
+                    }
+                });
+            });
+            
+            // Filter functionality
+            const applyFiltersBtn = document.querySelector('.apply-filters-btn');
+            applyFiltersBtn.addEventListener('click', function() {
+                // Simulate filter application
+                this.innerHTML = '<span class="loading-spinner me-2"></span>Đang áp dụng...';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-filter me-2"></i>Áp dụng bộ lọc';
+                    // In a real application, you would submit the form or make an AJAX request here
+                }, 1000);
+            });
+            
+            // Favorite functionality
+            const favoriteButtons = document.querySelectorAll('.btn-favorite');
+            favoriteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.classList.contains('active')) {
+                        this.classList.remove('active');
+                        this.innerHTML = '<i class="fas fa-heart"></i>';
+                        showNotification('Đã xóa khỏi danh sách yêu thích!', 'info');
+                    } else {
+                        this.classList.add('active');
+                        this.innerHTML = '<i class="fas fa-heart"></i>';
+                        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+                        
+                        // Update favorite badge
+                        const favoriteBadge = document.querySelectorAll('.nav-badge')[0];
+                        if (favoriteBadge) {
+                            let currentCount = parseInt(favoriteBadge.textContent);
+                            favoriteBadge.textContent = currentCount + 1;
+                        }
+                    }
+                });
+            });
+        });
+        
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.custom-notification');
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+            
+            const notification = document.createElement('div');
+            notification.className = `custom-notification alert alert-${type} alert-dismissible fade show`;
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    <div>${message}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

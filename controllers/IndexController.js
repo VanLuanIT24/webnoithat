@@ -6,43 +6,118 @@ const customers = require("../models/customers");
 const region = require('../models/region');
 const bill = require('../models/bills');
 const OjectId = require('mongodb').ObjectId;
+
 class IndexController {
   index(req, res, next) {
+    console.log("=== DEBUG INDEX CONTROLLER ===");
+    console.log("User session:", req.user);
+    console.log("Is authenticated:", req.isAuthenticated());
+    
     type.find({}, (err, result) => {
-      // Lấy sản phẩm nổi bật (có thể lấy sản phẩm có featured: true hoặc sản phẩm mới nhất)
-      product.find({ "description.status": true })
+        if (err) {
+            console.error("Lỗi lấy danh mục:", err);
+            result = [];
+        }
+
+        console.log("Số danh mục tìm thấy:", result?.length);
+
+        // Lấy sản phẩm nổi bật
+        product.find({ 
+            "description.status": true
+        })
         .sort({ createdAt: -1 })
         .limit(8)
         .exec((err, featuredProducts) => {
-          if (req.isAuthenticated()) {
-            customers.findOne({ 'loginInformation.userName': req.session.passport.user.username }, (err, customerResult) => {
-              res.render("index", { 
-                data: result, 
-                featuredProducts: featuredProducts,
-                message: req.flash("success"), 
-                customer: customerResult 
-              });
-            })
-          } else {
-            res.render("index", { 
-              data: result, 
-              featuredProducts: featuredProducts,
-              message: req.flash("success"), 
-              customer: undefined 
-            });
-          }
+            if (err) {
+                console.error("Lỗi lấy sản phẩm:", err);
+                featuredProducts = [];
+            }
+
+            console.log("Số sản phẩm tìm thấy:", featuredProducts?.length);
+            
+            // DEBUG: Kiểm tra dữ liệu sản phẩm
+            if (featuredProducts && featuredProducts.length > 0) {
+                featuredProducts.forEach((prod, index) => {
+                    console.log(`Sản phẩm ${index}:`, {
+                        name: prod.productName,
+                        stock: prod.description?.stock,
+                        price: prod.description?.price,
+                        status: prod.description?.status,
+                        inStock: prod.description?.inStock
+                    });
+                });
+            }
+
+            if (req.isAuthenticated()) {
+                console.log("User đã đăng nhập, username:", req.user?.loginInformation?.userName);
+                
+                // SỬA Ở ĐÂY: Lấy username từ req.user.loginInformation.userName
+                const username = req.user?.loginInformation?.userName;
+                
+                if (!username) {
+                    console.log("Không tìm thấy username trong session");
+                    res.render("index", { 
+                        data: result || [], 
+                        featuredProducts: featuredProducts || [],
+                        message: req.flash("success"), 
+                        customer: undefined 
+                    });
+                    return;
+                }
+                
+                // Tìm customer theo username
+                customers.findOne({ 
+                    'loginInformation.userName': username 
+                }, (err, customerResult) => {
+                    if (err) {
+                        console.error("Lỗi tìm user:", err);
+                        customerResult = null;
+                    }
+                    // Tính số lượng sản phẩm yêu thích
+                    const favoriteCount = customerResult ? customerResult.listFavorite.length : 0;
+                    console.log("Kết quả tìm user:", customerResult ? "Found" : "Not found");
+                    if (customerResult) {
+                        console.log("User info:", {
+                            firstName: customerResult.fullNameCustomer?.firstName,
+                            lastName: customerResult.fullNameCustomer?.lastName,
+                            avatar: customerResult.avatar
+                        });
+                    }
+                    
+                    res.render("index", { 
+                        data: result || [], 
+                        featuredProducts: featuredProducts || [],
+                        message: req.flash("success"), 
+                        customer: customerResult,
+                        favoriteCount: favoriteCount
+                    });
+                });
+            } else {
+                console.log("User chưa đăng nhập");
+                res.render("index", { 
+                    data: result || [], 
+                    featuredProducts: featuredProducts || [],
+                    message: req.flash("success"), 
+                    customer: undefined 
+                });
+            }
         });
     });
   }
+
+  // Các phương thức khác giữ nguyên...
   getLoginPage(req, res, next) {
     var messageError = req.flash("error");
     var messageSuccess = req.flash("success");
     res.render("loginuser", { message: messageError.length != 0 ? messageError : messageSuccess, typeMessage:  messageSuccess.length != 0 ? 'success': 'error'});
   }
+
   getCartPage(req, res, next) {
     if (req.isAuthenticated()) {
+      // SỬA Ở ĐÂY: Lấy username từ req.user
+      const username = req.user?.loginInformation?.userName;
       customers.findOne(
-        { "loginInformation.userName": req.session.passport.user.username },
+        { "loginInformation.userName": username },
         (err, customerResult) => {
           res.render("cart", { customer: customerResult, message: req.flash('success') });
         }
@@ -51,10 +126,12 @@ class IndexController {
       res.redirect("/login");
     }
   }
+
   getAddToCartSingle(req, res, next) {
     if (req.isAuthenticated()) {
       var id = req.params.id;
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY: Lấy username từ req.user
+      var user = req.user?.loginInformation?.userName;
       product.findOne({ _id: id }, (err, productResult) => {
         customers
           .findOneAndUpdate(
@@ -87,10 +164,15 @@ class IndexController {
       res.redirect("/login");
     }
   }
+
+  // Các phương thức khác cũng cần sửa tương tự...
+  // Tìm tất cả các chỗ có req.session.passport.user.username và thay bằng req.user?.loginInformation?.userName
+
   postAddToCartMulti(req, res, next) {
     if (req.isAuthenticated()) {
       var id = req.params.id;
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       var amount = req.body.quantity ? req.body.quantity : 1;
       product.findOne({ _id: id }, (err, productResult) => {
         customers
@@ -124,10 +206,12 @@ class IndexController {
       res.redirect("/login");
     }
   }
+
   postUpdateQTYInCart(req, res, next) {
     var id = req.params.id;
     var quantity = parseInt(req.body.amount);
-    var user = req.session.passport.user.username;
+    // SỬA Ở ĐÂY
+    var user = req.user?.loginInformation?.userName;
     customers.updateOne({ "loginInformation.userName": user, "listProduct.productID": id }, { $set: { "listProduct.$.amount": quantity } })
       .then(() => {
         res.redirect('/cart');
@@ -136,10 +220,14 @@ class IndexController {
         console.log(err);
       });
   }
+
+  
+
   getDeleteProductInCart(req, res, next) {
     if (req.isAuthenticated()) {
       var id = req.params.id;
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       customers.updateMany({ 'loginInformation.userName': user }, { $pull: { listProduct: { productID: id } } })
         .then(() => {
           req.flash("success", "Đã xóa sản phẩm khỏi giỏ!");
@@ -153,9 +241,11 @@ class IndexController {
       res.redirect('/login');
     }
   }
+
   getCheckoutPage(req, res, next) {
     if (req.isAuthenticated()) {
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       customers.findOne({ 'loginInformation.userName': user }, (err, customerResult) => {
         res.render("checkout", { customer: customerResult });
       });
@@ -163,9 +253,11 @@ class IndexController {
       res.redirect('/login');
     }
   }
+
   postCheckout(req, res, next) {
     if (req.isAuthenticated()) {
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       var city = req.body.city;
       var district = req.body.district;
       var ward = req.body.ward;
@@ -201,6 +293,7 @@ class IndexController {
       res.redirect('/login');
     }
   }
+
   search(req, res, next) {
     var key = req.query.search;
     type.find({}, (err, typeResult) => {
@@ -209,7 +302,9 @@ class IndexController {
           { productName: { $regex: key, $options: "i" } },
           (err, productResult) => {
             if (req.isAuthenticated()) {
-              customers.findOne({ 'loginInformation.userName': req.session.passport.user.username }, (err, customerResult) => {
+              // SỬA Ở ĐÂY
+              const username = req.user?.loginInformation?.userName;
+              customers.findOne({ 'loginInformation.userName': username }, (err, customerResult) => {
                 res.render("search", {
                   types: typeResult,
                   suppliers: supplierResult,
@@ -233,9 +328,11 @@ class IndexController {
       });
     });
   }
+
   getRegisterPage(req, res, next) {
     res.render('sign-up', {message: req.flash('success').length != 0 ? req.flash('success') : req.flash('error')});
   }
+
   postRegisterUser(req, res, next) {
     var firstname = req.body.firstname;
     var lastname = req.body.lastname;
@@ -277,10 +374,12 @@ class IndexController {
       }
     });
   }
+
   getAddFavorite(req, res, next) {
     if (req.isAuthenticated()) {
       var id = req.params.id;
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       product.findOne({ _id: id }, (err, productResult) => {
         customers
           .findOneAndUpdate(
@@ -307,10 +406,13 @@ class IndexController {
       res.redirect("/login");
     }
   }
+
   getFavoritePage(req, res, next) {
     var itemsPerPage = 6;
     if(req.isAuthenticated()) {
-      customers.findOne({'loginInformation.userName': req.session.passport.user.username}, (err, customerResult) => {
+      // SỬA Ở ĐÂY
+      const username = req.user?.loginInformation?.userName;
+      customers.findOne({'loginInformation.userName': username}, (err, customerResult) => {
         type.find({}, (err, data) => {
           supplier.find({}, (err, supplier) => {
             res.render("favorites", {
@@ -329,11 +431,14 @@ class IndexController {
       res.redirect('/login');
     }
   }
+
   getFavoriteAtPage(req, res, next) {
     var itemsPerPage = 6;
     var page = req.params.page;
     if(req.isAuthenticated()) {
-      customers.findOne({'loginInformation.userName': req.session.passport.user.username}, (err, customerResult) => {
+      // SỬA Ở ĐÂY
+      const username = req.user?.loginInformation?.userName;
+      customers.findOne({'loginInformation.userName': username}, (err, customerResult) => {
         type.find({}, (err, data) => {
           supplier.find({}, (err, supplier) => {
             res.render("favorites", {
@@ -352,10 +457,12 @@ class IndexController {
       res.redirect('/login');
     }
   }
+
   getDeleteFavorite(req, res, next) {
     if (req.isAuthenticated()) {
       var id = req.params.id;
-      var user = req.session.passport.user.username;
+      // SỬA Ở ĐÂY
+      var user = req.user?.loginInformation?.userName;
       customers.updateMany({ 'loginInformation.userName': user }, { $pull: { listFavorite: { _id: OjectId(id) } } })
         .then(() => {
           req.flash("success", "Đã sản phẩm khỏi yêu thích!");

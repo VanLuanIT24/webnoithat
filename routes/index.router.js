@@ -22,7 +22,6 @@ router.post('/cart/update/:id', indexController.postUpdateQTYInCart);
 router.get('/cart/:id', indexController.getAddToCartSingle);
 router.post('/cart/:id', indexController.postAddToCartMulti);
 router.get('/cart', indexController.getCartPage);
-
 router.get('/favorite', indexController.getFavoritePage);
 router.get('/favorite/page/:page', indexController.getFavoriteAtPage);
 router.get('/product/favorite/delete/:id', indexController.getDeleteFavorite);

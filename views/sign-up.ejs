@@ -1,91 +1,358 @@
 <!doctype html>
-<html lang="en">
- 
+<html lang="vi">
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Amado - Đăng ký</title>
 
-    <!-- Favicon  -->
     <link rel="icon" href="/public/img/core-img/favicon.ico" />
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/public/vendor/bootstrap/css/bootstrap.min.css">
-    <!-- <link href="/public/assets/vendor/fonts/circular-std/style.css" rel="stylesheet"> -->
     <link rel="stylesheet" href="/public/assets/libs/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="/public/assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-    html,
-    body {
-        height: 100%;
-    }
-
-    body {
-        display: -ms-flexbox;
-        display: flex;
-        -ms-flex-align: center;
-        align-items: center;
-        padding-top: 40px;
-        padding-bottom: 40px;
-    }
+        :root {
+            --primary-color: #4e73df;
+            --primary-dark: #2e59d9;
+            --secondary-color: #858796;
+            --light-color: #f8f9fc;
+            --border-color: #e3e6f0;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .register-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+            width: 100%;
+            max-width: 800px;
+            transition: all 0.3s ease;
+        }
+        
+        .register-container:hover {
+            box-shadow: 0 18px 40px rgba(50, 50, 93, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .register-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            padding: 25px 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .register-header img {
+            max-height: 50px;
+            margin-bottom: 10px;
+        }
+        
+        .register-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .register-header p {
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .register-body {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            height: 50px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+        }
+        
+        .input-icon {
+            position: relative;
+        }
+        
+        .input-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+            z-index: 5;
+        }
+        
+        .input-icon .form-control {
+            padding-left: 45px;
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            height: 50px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+        
+        .register-footer {
+            padding: 20px 30px;
+            background-color: var(--light-color);
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .register-footer a {
+            color: var(--primary-color);
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .register-footer a:hover {
+            color: var(--primary-dark);
+        }
+        
+        .password-strength {
+            height: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            background-color: #eee;
+            overflow: hidden;
+        }
+        
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        .password-strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .terms-check {
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .register-container {
+                margin: 0 15px;
+            }
+            
+            .register-body {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
-<!-- ============================================================== -->
-<!-- signup form  -->
-<!-- ============================================================== -->
 
 <body>
-    <!-- ============================================================== -->
-    <!-- signup form  -->
-    <!-- ============================================================== -->
-    <form class="splash-container" method="POST" action="/sign-up">
-        <div class="card">
-            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;" class="card-header">
-                <img class="logo-img mb-3" src="/public/img/core-img/logo.png" alt="logo">
-                <p>Vui lòng nhập thông tin</p>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="text" name="firstname" required placeholder="Họ" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="text" name="lastname" required placeholder="Tên" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="text" name="phone" required placeholder="Số điện thoại" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="text" name="cmnd" required placeholder="CMND" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="text" name="username" required placeholder="Tên tài khoản" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="email" name="email" required placeholder="E-mail" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" id="pass1" name="password" type="password" required placeholder="Mật khẩu">
-                </div>
-                <div class="form-group">
-                    <input class="form-control form-control-lg" type="password" id="pass2" name="repassword" required placeholder="Xác nhận mật khẩu">
-                </div>
-                <div class="form-group pt-2">
-                    <button class="btn btn-block btn-primary" type="submit">Tạo tài khoản</button>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: center; align-items: center;" class="card-footer bg-white">
-                <p>Đã có tài khoản? <a href="/login" class="text-secondary ml-2"> Đăng nhập ngay</a></p>
-            </div>
+    <div class="register-container">
+        <div class="register-header">
+            <img src="/public/img/core-img/logo.png" alt="Amado Logo">
+            <h1>Tạo tài khoản mới</h1>
+            <p>Điền thông tin để đăng ký tài khoản</p>
         </div>
-    </form>
+        
+        <form method="POST" action="/sign-up">
+            <div class="register-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="firstname" class="form-label">Họ</label>
+                            <input class="form-control" type="text" name="firstname" id="firstname" required placeholder="Nhập họ" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="lastname" class="form-label">Tên</label>
+                            <input class="form-control" type="text" name="lastname" id="lastname" required placeholder="Nhập tên" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Số điện thoại</label>
+                            <div class="input-icon">
+                                <i class="fas fa-phone"></i>
+                                <input class="form-control" type="text" name="phone" id="phone" required placeholder="Nhập số điện thoại" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cmnd" class="form-label">CMND/CCCD</label>
+                            <input class="form-control" type="text" name="cmnd" id="cmnd" required placeholder="Nhập CMND/CCCD" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">Tên tài khoản</label>
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                        <input class="form-control" type="text" name="username" id="username" required placeholder="Chọn tên tài khoản" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <div class="input-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input class="form-control" type="email" name="email" id="email" required placeholder="Nhập địa chỉ email" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input class="form-control" id="password" name="password" type="password" required placeholder="Tạo mật khẩu">
+                            </div>
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="password-strength-bar"></div>
+                            </div>
+                            <div class="password-strength-text" id="password-strength-text"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="repassword" class="form-label">Xác nhận mật khẩu</label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input class="form-control" type="password" id="repassword" name="repassword" required placeholder="Nhập lại mật khẩu">
+                            </div>
+                            <div id="password-match" class="mt-2" style="font-size: 14px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group terms-check">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            Tôi đồng ý với <a href="#" class="text-primary">Điều khoản dịch vụ</a> và <a href="#" class="text-primary">Chính sách bảo mật</a>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-register btn-block">Đăng ký tài khoản</button>
+            </div>
+        </form>
+        
+        <div class="register-footer">
+            <p>Đã có tài khoản? <a href="/login" class="text-primary ml-1">Đăng nhập ngay</a></p>
+        </div>
+    </div>
+
     <script src="/public/js/jquery/jquery-2.2.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
+    <script>
+        // Password strength indicator
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('password-strength-bar');
+            const strengthText = document.getElementById('password-strength-text');
+            
+            let strength = 0;
+            let text = '';
+            let color = '';
+            
+            // Check password length
+            if (password.length >= 8) strength += 25;
+            
+            // Check for lowercase letters
+            if (/[a-z]/.test(password)) strength += 25;
+            
+            // Check for uppercase letters
+            if (/[A-Z]/.test(password)) strength += 25;
+            
+            // Check for numbers and special characters
+            if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            // Set strength text and color
+            if (strength === 0) {
+                text = '';
+                color = 'transparent';
+            } else if (strength <= 25) {
+                text = 'Rất yếu';
+                color = '#e74a3b';
+            } else if (strength <= 50) {
+                text = 'Yếu';
+                color = '#f6c23e';
+            } else if (strength <= 75) {
+                text = 'Khá';
+                color = '#4e73df';
+            } else {
+                text = 'Mạnh';
+                color = '#1cc88a';
+            }
+            
+            strengthBar.style.width = strength + '%';
+            strengthBar.style.backgroundColor = color;
+            strengthText.textContent = text;
+            strengthText.style.color = color;
+        });
+        
+        // Password match validation
+        document.getElementById('repassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const repassword = this.value;
+            const matchElement = document.getElementById('password-match');
+            
+            if (repassword === '') {
+                matchElement.textContent = '';
+            } else if (password === repassword) {
+                matchElement.textContent = 'Mật khẩu khớp';
+                matchElement.style.color = '#1cc88a';
+            } else {
+                matchElement.textContent = 'Mật khẩu không khớp';
+                matchElement.style.color = '#e74a3b';
+            }
+        });
+    </script>
+    
     <% if(message && message.length > 0){%>
         <script>
             toastr.error('<%= message %>','Thông báo', {timeOut: 1500, progressBar: true, closeButton: true});
         </script>
     <%} %> 
 </body>
-
- 
 </html>

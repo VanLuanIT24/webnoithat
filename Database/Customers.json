@@ -1,8 +1,9 @@
 [
   {
+    "_id": "609142114045f5b26f8c79c0",
     "fullNameCustomer": {
       "firstName": "Trịnh Tường",
-      "lastName:": "Khâm"
+      "lastName": "Khâm"
     },
     "dateOfBirth": "08/03/1999",
     "sex": true,
@@ -16,16 +17,18 @@
       "userName": "tuongkhamuser",
       "password": "khamtt12345",
       "type": "User",
-      "roles": [
-        "Normal"
-      ]
+      "roles": ["Normal"],
+      "status": true
     },
-    "avatar": "/public/images/avatar-2.jpg"
+    "avatar": "/public/images/avatar-2.jpg",
+    "createdAt": "2024-01-15T08:00:00.000Z",
+    "updatedAt": "2024-01-15T08:00:00.000Z"
   },
   {
+    "_id": "609142114045f5b26f8c79c1",
     "fullNameCustomer": {
       "firstName": "Trịnh Tường",
-      "lastName:": "Khâm"
+      "lastName": "Khâm"
     },
     "dateOfBirth": "08/03/1999",
     "sex": true,
@@ -39,10 +42,336 @@
       "userName": "user",
       "password": "123",
       "type": "User",
-      "roles": [
-        "Normal"
-      ]
+      "roles": ["Normal"],
+      "status": true
     },
-    "avatar": "/public/images/avatar-2.jpg"
+    "avatar": "/public/images/avatar-2.jpg",
+    "createdAt": "2024-01-14T10:30:00.000Z",
+    "updatedAt": "2024-01-14T10:30:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c2",
+    "fullNameCustomer": {
+      "firstName": "Nguyễn Thị",
+      "lastName": "Mai Anh"
+    },
+    "dateOfBirth": "15/06/1995",
+    "sex": false,
+    "identityCardNumber": "025874123",
+    "address": "Quận 1, TP.HCM",
+    "phoneNumber": "0912345678",
+    "email": "maianh.nguyen@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "maianh95",
+      "password": "maianh123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-3.jpg",
+    "createdAt": "2024-01-13T14:20:00.000Z",
+    "updatedAt": "2024-01-13T14:20:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c3",
+    "fullNameCustomer": {
+      "firstName": "Trần Văn",
+      "lastName": "Hùng"
+    },
+    "dateOfBirth": "22/09/1988",
+    "sex": true,
+    "identityCardNumber": "036985214",
+    "address": "Quận Cầu Giấy, Hà Nội",
+    "phoneNumber": "0987654321",
+    "email": "hung.tran@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "hungtran88",
+      "password": "hungtran123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-4.jpg",
+    "createdAt": "2024-01-12T09:15:00.000Z",
+    "updatedAt": "2024-01-12T09:15:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c4",
+    "fullNameCustomer": {
+      "firstName": "Lê Thị",
+      "lastName": "Thu Hà"
+    },
+    "dateOfBirth": "30/11/1992",
+    "sex": false,
+    "identityCardNumber": "074125896",
+    "address": "Quận Hải Châu, Đà Nẵng",
+    "phoneNumber": "0932145687",
+    "email": "thuha.le@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "thuha92",
+      "password": "thuha123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-5.jpg",
+    "createdAt": "2024-01-11T16:45:00.000Z",
+    "updatedAt": "2024-01-11T16:45:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c5",
+    "fullNameCustomer": {
+      "firstName": "Phạm Đức",
+      "lastName": "Mạnh"
+    },
+    "dateOfBirth": "12/04/1990",
+    "sex": true,
+    "identityCardNumber": "085236974",
+    "address": "Quận Ninh Kiều, Cần Thơ",
+    "phoneNumber": "0974123658",
+    "email": "ducmanh.pham@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "ducmanh90",
+      "password": "ducmanh123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-6.jpg",
+    "createdAt": "2024-01-10T11:30:00.000Z",
+    "updatedAt": "2024-01-10T11:30:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c6",
+    "fullNameCustomer": {
+      "firstName": "Hoàng Thị",
+      "lastName": "Kim Ngân"
+    },
+    "dateOfBirth": "18/07/1997",
+    "sex": false,
+    "identityCardNumber": "096325874",
+    "address": "Quận Thanh Khê, Đà Nẵng",
+    "phoneNumber": "0947852369",
+    "email": "kimngan.hoang@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "kimngan97",
+      "password": "kimngan123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-7.jpg",
+    "createdAt": "2024-01-09T13:20:00.000Z",
+    "updatedAt": "2024-01-09T13:20:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c7",
+    "fullNameCustomer": {
+      "firstName": "Vũ Minh",
+      "lastName": "Quân"
+    },
+    "dateOfBirth": "25/12/1985",
+    "sex": true,
+    "identityCardNumber": "063258741",
+    "address": "Quận 3, TP.HCM",
+    "phoneNumber": "0915784632",
+    "email": "minhquan.vu@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "minhquan85",
+      "password": "minhquan123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-8.jpg",
+    "createdAt": "2024-01-08T15:10:00.000Z",
+    "updatedAt": "2024-01-08T15:10:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c8",
+    "fullNameCustomer": {
+      "firstName": "Đặng Thị",
+      "lastName": "Thanh Thảo"
+    },
+    "dateOfBirth": "03/05/1993",
+    "sex": false,
+    "identityCardNumber": "078945612",
+    "address": "Quận Hồng Bàng, Hải Phòng",
+    "phoneNumber": "0963258741",
+    "email": "thanhthao.dang@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "thanhthao93",
+      "password": "thanhthao123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-9.jpg",
+    "createdAt": "2024-01-07T10:25:00.000Z",
+    "updatedAt": "2024-01-07T10:25:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79c9",
+    "fullNameCustomer": {
+      "firstName": "Bùi Văn",
+      "lastName": "Tài"
+    },
+    "dateOfBirth": "14/08/1987",
+    "sex": true,
+    "identityCardNumber": "085214796",
+    "address": "Quận Liên Chiểu, Đà Nẵng",
+    "phoneNumber": "0987412365",
+    "email": "vantai.bui@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "vantai87",
+      "password": "vantai123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-10.jpg",
+    "createdAt": "2024-01-06T08:40:00.000Z",
+    "updatedAt": "2024-01-06T08:40:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79ca",
+    "fullNameCustomer": {
+      "firstName": "Ngô Thị",
+      "lastName": "Bích Ngọc"
+    },
+    "dateOfBirth": "27/10/1994",
+    "sex": false,
+    "identityCardNumber": "096325874",
+    "address": "Quận 5, TP.HCM",
+    "phoneNumber": "0936587412",
+    "email": "bichngoc.ngo@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "bichngoc94",
+      "password": "bichngoc123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-11.jpg",
+    "createdAt": "2024-01-05T14:15:00.000Z",
+    "updatedAt": "2024-01-05T14:15:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79cb",
+    "fullNameCustomer": {
+      "firstName": "Lý Văn",
+      "lastName": "Phúc"
+    },
+    "dateOfBirth": "09/02/1991",
+    "sex": true,
+    "identityCardNumber": "074125896",
+    "address": "Quận Sơn Trà, Đà Nẵng",
+    "phoneNumber": "0974123658",
+    "email": "vanphuc.ly@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "vanphuc91",
+      "password": "vanphuc123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-12.jpg",
+    "createdAt": "2024-01-04T11:50:00.000Z",
+    "updatedAt": "2024-01-04T11:50:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79cc",
+    "fullNameCustomer": {
+      "firstName": "Mai Thị",
+      "lastName": "Hồng Nhung"
+    },
+    "dateOfBirth": "21/03/1996",
+    "sex": false,
+    "identityCardNumber": "085236974",
+    "address": "Quận 7, TP.HCM",
+    "phoneNumber": "0947852369",
+    "email": "hongnhung.mai@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "hongnhung96",
+      "password": "hongnhung123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-13.jpg",
+    "createdAt": "2024-01-03T09:05:00.000Z",
+    "updatedAt": "2024-01-03T09:05:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79cd",
+    "fullNameCustomer": {
+      "firstName": "Hồ Văn",
+      "lastName": "Bảo"
+    },
+    "dateOfBirth": "16/11/1989",
+    "sex": true,
+    "identityCardNumber": "063258741",
+    "address": "Quận Ngô Quyền, Hải Phòng",
+    "phoneNumber": "0915784632",
+    "email": "vanbao.ho@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "vanbao89",
+      "password": "vanbao123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-14.jpg",
+    "createdAt": "2024-01-02T16:30:00.000Z",
+    "updatedAt": "2024-01-02T16:30:00.000Z"
+  },
+  {
+    "_id": "609142114045f5b26f8c79ce",
+    "fullNameCustomer": {
+      "firstName": "Cao Thị",
+      "lastName": "Mỹ Linh"
+    },
+    "dateOfBirth": "08/09/1998",
+    "sex": false,
+    "identityCardNumber": "078945612",
+    "address": "Quận Hà Đông, Hà Nội",
+    "phoneNumber": "0963258741",
+    "email": "mylinh.cao@gmail.com",
+    "listProduct": [],
+    "listFavorite": [],
+    "loginInformation": {
+      "userName": "mylinh98",
+      "password": "mylinh123",
+      "type": "User",
+      "roles": ["Normal"],
+      "status": true
+    },
+    "avatar": "/public/images/avatar-15.jpg",
+    "createdAt": "2024-01-01T12:55:00.000Z",
+    "updatedAt": "2024-01-01T12:55:00.000Z"
   }
 ]
