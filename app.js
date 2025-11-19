@@ -1,7 +1,7 @@
-// app.js 
 const express = require("express");
 const app = express();
 const path = require("path");
+require('./config/database');
 const index = require('./routes/index.router');
 const admin = require("./routes/admin.route");
 const product = require("./routes/product.route");
@@ -9,108 +9,143 @@ const categories = require("./routes/categories.route");
 const shipping = require('./routes/shipping.route');
 const support = require('./routes/support.route');
 const about = require('./routes/about.route');
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+// Nếu app chạy sau proxy (Railway), bật trust proxy để cookie secure và IP forwarding hoạt động
+app.set('trust proxy', 1);
 const flash = require('connect-flash');
-const mongoose = require("mongoose");
-// Passport Config
-const adminModel = require('./models/admin');
-const customer = require('./models/customers');
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require('bcrypt');
+
+// Import MySQL models
+const adminModel = require('./models-mysql/admins');
+const customerModel = require('./models-mysql/customers');
+
+// Cấu hình Passport Strategies - SỬA LẠI HOÀN TOÀN
+// Strategy cho user
+passport.use('user-local', new LocalStrategy({
+  usernameField: 'username',
+  passwordField: 'password',
+  passReqToCallback: true
+}, async (req, username, password, done) => {
+  try {
+    console.log('Trying to authenticate user:', username);
+    
+    // SỬA: Tìm user bằng userName
+    const user = await customerModel.findOne({ userName: username });
+    
+    if (!user) {
+      console.log('User not found');
+      return done(null, false, { message: 'Tài khoản không tồn tại!' });
+    }
+    
+    if (!user.loginInformation.password) {
+      console.log('Authentication failed: user has no password set:', username);
+      return done(null, false, { message: 'Tài khoản chưa đặt mật khẩu.' });
+    }
+    
+    const isMatch = await bcrypt.compare(password, user.loginInformation.password);
+    if (!isMatch) {
+      console.log('Password incorrect');
+      return done(null, false, { message: 'Mật khẩu không đúng!' });
+    }
+    
+    if (user.loginInformation.status === false) {
+      console.log('Account blocked');
+      return done(null, false, { message: 'Tài khoản đã bị khóa!' });
+    }
+    
+    console.log('User authenticated successfully');
+    return done(null, user);
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return done(error);
+  }
+}));
+
+// Strategy cho admin
+passport.use('admin-local', new LocalStrategy({
+  usernameField: 'username',
+  passwordField: 'password',
+  passReqToCallback: true
+}, async (req, username, password, done) => {
+  try {
+    console.log('Trying to authenticate admin:', username);
+    
+    // SỬA: Tìm admin bằng userName
+    const admin = await adminModel.findOne({ userName: username });
+    
+    if (!admin) {
+      console.log('Admin not found');
+      return done(null, false, { message: 'Tài khoản admin không tồn tại!' });
+    }
+    
+    if (admin.loginInformation.password !== password) {
+      console.log('Admin password incorrect');
+      return done(null, false, { message: 'Mật khẩu không đúng!' });
+    }
+    
+    console.log('Admin authenticated successfully');
+    return done(null, admin);
+  } catch (error) {
+    console.error('Admin authentication error:', error);
+    return done(error);
+  }
+}));
+
+// Serialize user
+passport.serializeUser((user, done) => {
+  console.log('Serializing user:', user.loginInformation?.userName);
+  done(null, {
+    id: user._id,
+    username: user.loginInformation.userName,
+    type: user.loginInformation.type
+  });
+});
+
+// Deserialize user
+passport.deserializeUser(async (sessionUser, done) => {
+  try {
+    console.log('Deserializing user:', sessionUser);
+    
+    if (sessionUser.type === 'Admin') {
+      const admin = await adminModel.findOne({ userName: sessionUser.username });
+      done(null, admin);
+    } else {
+      const user = await customerModel.findOne({ userName: sessionUser.username });
+      done(null, user);
+    }
+  } catch (error) {
+    console.error('Deserialize error:', error);
+    done(error);
+  }
+});
 
 app.use(
   session({
     secret: "thesecret",
     saveUninitialized: true,
     resave: false,
-    cookie: {maxAge: Infinity, path: '/'}
-  })
-);
-app.use(flash());
-passport.use(
-  'admin-local',
-  new LocalStrategy(function (username, password, done) {
-    adminModel.findOne(
-      { 'loginInformation.userName': username },
-      function (err, user) {
-        if (err) {
-          return done(err);
-        }
-        if (!user) {
-          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
-        }
-        if (user.loginInformation.password !== password) {
-          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
-        } 
-        return done(null, user, {message: 'Đăng nhập thành công!'});
-      }
-    );
-  })
-);
-passport.use(
-  'user-local',
-  new LocalStrategy(function (username, password, done) {
-    customer.findOne(
-      { 'loginInformation.userName': username },
-      function (err, user) {
-        if (err) {
-          return done(err);
-        }
-        if (!user) {
-          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
-        }
-        if (user.loginInformation.password !== password) {
-          return done(null, false, {message: 'Sai tên tài khoản hoặc mật khẩu!'});
-        } 
-        return done(null, user, {message: 'Đăng nhập thành công!'});
-      }
-    );
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
   })
 );
 
-
+// Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-passport.serializeUser((user, done) => {
-    return done(null, {username: user.loginInformation.userName, type: user.loginInformation.type});
+
+// Flash messages
+app.use(flash());
+
+// Make user available to all views
+app.use((req, res, next) => {
+  res.locals.user = req.user;
+  res.locals.isAuthenticated = req.isAuthenticated();
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
 });
-passport.deserializeUser((user, done) => {
-  if(user.type == 'Admin') {
-    adminModel.findOne({ 'loginInformation.userName': user.username }, (err, result) => {
-      if (err) return done(err);
-      if (!result) return done(null, false);
-      if (result.loginInformation.userName == user.username) {
-        return done(null, result);
-      }
-    });
-  } else {
-    customer.findOne({ 'loginInformation.userName': user.username }, (err, result) => {
-      if (err) return done(err);
-      if (!result) return done(null, false);
-      if (result.loginInformation.userName == user.username) {
-        return done(null, result);
-      }
-    });
-  }
-  });
-// Mongoose connect
-mongoose
-  .connect('mongodb+srv://luanvo10042004_db_user:Maicodon1@webnoithat.yrwqgxf.mongodb.net/webnoithat?retryWrites=true&w=majority&appName=webnoithat', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("DB Connected!");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-mongoose.set("useFindAndModify", false); 
-mongoose.connection.on("error", (err) => {
-  console.log(err);
-});
-// End mongoose connect
 
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ extended: true, limit: "30mb" }));
@@ -127,5 +162,5 @@ app.use('/support', support);
 app.use('/about', about);
 
 app.listen(PORT, () => {
-  console.log(`Server is started at: localhost:${PORT}`);
+  console.log(`Server is started at: 0.0.0.0:${PORT}`);
 });

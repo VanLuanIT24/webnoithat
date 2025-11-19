@@ -63,17 +63,21 @@ router.get('/dashboard/categories-manager/update/:id', adminController.getUpdate
 router.get('/dashboard/categories-manager/delete/:id', adminController.getDeleteCategoriesInfo);
 
 // Order Manager
-// 1. Pending
+
+
+router.get('/dashboard/orders-manager/update/:id', adminController.getUpdateOrder);
+router.post('/dashboard/orders-manager/update/:id', adminController.postUpdateOrder);
+router.get('/dashboard/orders-manager/delete/:id', adminController.getDeleteOrder);
 router.get('/dashboard/pending-order-manager/update/:id', adminController.getUpdateStatusOrder);
+router.get('/dashboard/orders-manager/detail/:id', adminController.getOrderDetail);
+router.get('/dashboard/pending-orders-manager/detail/:id', adminController.getOrderDetail);
+// 1. Pending
 router.get('/dashboard/pending-order-manager/delete/:id', adminController.getDeleteStatusOrder);
 router.get('/dashboard/pending-order-manager/update-all', adminController.getUpdateAllStatusOrder);
 router.get('/dashboard/pending-orders-manager/:page', adminController.getPendingOrderAtPage);
 router.get('/dashboard/pending-orders-manager', adminController.getPendingOrderPage);
 router.get('/dashboard/orders-manager', adminController.getOrdersManagerPage);
-// 2. Order
-router.get('/dashboard/orders-manager/update/:id', adminController.getUpdateOrder);
-router.post('/dashboard/orders-manager/update/:id', adminController.postUpdateOrder);
-router.get('/dashboard/orders-manager/delete/:id', adminController.getDeleteOrder);
+
 
 // GET Dashboard, Pagination
 router.get('/dashboard/products-manager/:page', adminController.getProductManagerAtPage);

@@ -8,13 +8,13 @@ mongoose.connect('mongodb+srv://luanvo10042004_db_user:Maicodon1@webnoithat.yrwq
 });
 
 // Import models
-const Admin = require('./models/admin');
-const Bill = require('./models/bills');
-const Customer = require('./models/customers');
-const Product = require('./models/products');
-const Region = require('./models/region');
-const Supplier = require('./models/suppliers');
-const Type = require('./models/types');
+const Admin = require('./models-mysql/admins');
+const Bill = require('./models-mysql/bills');
+const Customer = require('./models-mysql/customers');
+const Product = require('./models-mysql/products');
+const Region = require('./models-mysql/regions');
+const Supplier = require('./models-mysql/suppliers');
+const Type = require('./models-mysql/types');
 
 // Hàm chuyển đổi dữ liệu _id từ format { $oid: ... } sang ObjectId
 function convertData(data) {

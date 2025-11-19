@@ -1,477 +1,579 @@
-// controllers/IndexController.js
-const type = require("../models/types");
-const supplier = require("../models/suppliers");
-const product = require("../models/products");
-const customers = require("../models/customers");
-const region = require('../models/region');
-const bill = require('../models/bills');
-const OjectId = require('mongodb').ObjectId;
+const type = require("../models-mysql/types");
+const supplier = require("../models-mysql/suppliers");
+const product = require("../models-mysql/products");
+const customers = require("../models-mysql/customers");
+const region = require('../models-mysql/regions');
+const bill = require('../models-mysql/bills');
 
 class IndexController {
-  index(req, res, next) {
+  // IndexController.js - SỬA LẠI HOÀN TOÀN
+async index(req, res, next) {
+  try {
     console.log("=== DEBUG INDEX CONTROLLER ===");
     console.log("User session:", req.user);
     console.log("Is authenticated:", req.isAuthenticated());
     
-    type.find({}, (err, result) => {
-        if (err) {
-            console.error("Lỗi lấy danh mục:", err);
-            result = [];
-        }
+    // Lấy danh mục với status: true
+    const typeResult = await type.findActive();
+    console.log("Số danh mục tìm thấy:", typeResult?.length);
 
-        console.log("Số danh mục tìm thấy:", result?.length);
+    // LẤY SẢN PHẨM NỔI BẬT - SỬA LẠI CÁCH TÌM KIẾM
+    let featuredProducts = [];
+    try {
+      // Thử lấy sản phẩm đánh dấu featured (nếu có)
+      featuredProducts = await product.findWithLimit({
+        "description.featured": true,
+        "description.status": true
+      }, 12, 0);
 
-        // Lấy sản phẩm nổi bật
-        product.find({ 
-            "description.status": true
-        })
-        .sort({ createdAt: -1 })
-        .limit(8)
-        .exec((err, featuredProducts) => {
-            if (err) {
-                console.error("Lỗi lấy sản phẩm:", err);
-                featuredProducts = [];
-            }
+      // Nếu không có sản phẩm featured, lấy sản phẩm mới nhất theo description.status
+      if (!featuredProducts || featuredProducts.length === 0) {
+        console.log("Không có sản phẩm nổi bật, lấy sản phẩm mới nhất");
+        featuredProducts = await product.findWithLimit({
+          "description.status": true
+        }, 12, 0);
+      }
 
-            console.log("Số sản phẩm tìm thấy:", featuredProducts?.length);
-            
-            // DEBUG: Kiểm tra dữ liệu sản phẩm
-            if (featuredProducts && featuredProducts.length > 0) {
-                featuredProducts.forEach((prod, index) => {
-                    console.log(`Sản phẩm ${index}:`, {
-                        name: prod.productName,
-                        stock: prod.description?.stock,
-                        price: prod.description?.price,
-                        status: prod.description?.status,
-                        inStock: prod.description?.inStock
-                    });
-                });
-            }
+      console.log("Số sản phẩm tìm thấy:", featuredProducts?.length);
 
-            if (req.isAuthenticated()) {
-                console.log("User đã đăng nhập, username:", req.user?.loginInformation?.userName);
-                
-                // SỬA Ở ĐÂY: Lấy username từ req.user.loginInformation.userName
-                const username = req.user?.loginInformation?.userName;
-                
-                if (!username) {
-                    console.log("Không tìm thấy username trong session");
-                    res.render("index", { 
-                        data: result || [], 
-                        featuredProducts: featuredProducts || [],
-                        message: req.flash("success"), 
-                        customer: undefined 
-                    });
-                    return;
-                }
-                
-                // Tìm customer theo username
-                customers.findOne({ 
-                    'loginInformation.userName': username 
-                }, (err, customerResult) => {
-                    if (err) {
-                        console.error("Lỗi tìm user:", err);
-                        customerResult = null;
-                    }
-                    // Tính số lượng sản phẩm yêu thích
-                    const favoriteCount = customerResult ? customerResult.listFavorite.length : 0;
-                    console.log("Kết quả tìm user:", customerResult ? "Found" : "Not found");
-                    if (customerResult) {
-                        console.log("User info:", {
-                            firstName: customerResult.fullNameCustomer?.firstName,
-                            lastName: customerResult.fullNameCustomer?.lastName,
-                            avatar: customerResult.avatar
-                        });
-                    }
-                    
-                    res.render("index", { 
-                        data: result || [], 
-                        featuredProducts: featuredProducts || [],
-                        message: req.flash("success"), 
-                        customer: customerResult,
-                        favoriteCount: favoriteCount
-                    });
-                });
-            } else {
-                console.log("User chưa đăng nhập");
-                res.render("index", { 
-                    data: result || [], 
-                    featuredProducts: featuredProducts || [],
-                    message: req.flash("success"), 
-                    customer: undefined 
-                });
-            }
+      // Đảm bảo mỗi sản phẩm có đầy đủ thông tin
+      if (featuredProducts && featuredProducts.length > 0) {
+        featuredProducts = featuredProducts.map(p => {
+          if (!p.description) {
+            p.description = {
+              price: 0,
+              stock: 0,
+              unit: 'cái',
+              imageList: [],
+              status: true
+            };
+          }
+          return p;
         });
+      }
+    } catch (productError) {
+      console.error("Lỗi khi lấy sản phẩm:", productError);
+      featuredProducts = [];
+    }
+
+    let customerResult = null;
+    let favoriteCount = 0;
+
+    if (req.isAuthenticated() && req.user) {
+      console.log("User đã đăng nhập, username:", req.user.loginInformation?.userName);
+      
+      const username = req.user.loginInformation?.userName;
+      
+      if (username) {
+        // Tìm user theo userName
+        customerResult = await customers.findOne({ 
+          userName: username 
+        });
+        
+        console.log("Kết quả tìm user:", customerResult ? "Found" : "Not found");
+        
+        // Tính số lượng sản phẩm yêu thích
+        if (customerResult && customerResult.listFavorite) {
+          favoriteCount = Array.isArray(customerResult.listFavorite) 
+            ? customerResult.listFavorite.length 
+            : 0;
+        }
+      }
+    }
+
+    // DEBUG: Kiểm tra dữ liệu trước khi render
+    console.log("=== FINAL DATA ===");
+    console.log("Categories:", typeResult?.length);
+    console.log("Products:", featuredProducts?.length);
+    console.log("Customer:", customerResult ? "Exists" : "Null");
+
+    res.render("index", { 
+      data: typeResult || [], 
+      featuredProducts: featuredProducts || [],
+      message: req.flash("success")[0] || req.flash("error")[0], 
+      customer: customerResult,
+      favoriteCount: favoriteCount
+    });
+    
+  } catch (err) {
+    console.error("Lỗi trang chủ:", err);
+    res.render("index", { 
+      data: [], 
+      featuredProducts: [],
+      message: "Có lỗi xảy ra khi tải trang", 
+      customer: null 
     });
   }
-
-  // Các phương thức khác giữ nguyên...
+}
   getLoginPage(req, res, next) {
-    var messageError = req.flash("error");
-    var messageSuccess = req.flash("success");
-    res.render("loginuser", { message: messageError.length != 0 ? messageError : messageSuccess, typeMessage:  messageSuccess.length != 0 ? 'success': 'error'});
-  }
-
-  getCartPage(req, res, next) {
-    if (req.isAuthenticated()) {
-      // SỬA Ở ĐÂY: Lấy username từ req.user
-      const username = req.user?.loginInformation?.userName;
-      customers.findOne(
-        { "loginInformation.userName": username },
-        (err, customerResult) => {
-          res.render("cart", { customer: customerResult, message: req.flash('success') });
-        }
-      );
-    } else {
-      res.redirect("/login");
-    }
-  }
-
-  getAddToCartSingle(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      // SỬA Ở ĐÂY: Lấy username từ req.user
-      var user = req.user?.loginInformation?.userName;
-      product.findOne({ _id: id }, (err, productResult) => {
-        customers
-          .findOneAndUpdate(
-            { "loginInformation.userName": user },
-            {
-              $push: {
-                listProduct: [
-                  {
-                    productID: productResult._id.toString(),
-                    productName: productResult.productName,
-                    productPrice: productResult.description.price,
-                    productImage: productResult.description.imageList[0],
-                    amount: 1,
-                  },
-                ],
-              },
-            }
-          )
-          .then(() => {
-            req.flash("success", "Sản phẩm đã thêm vào giỏ!");
-            res.redirect(`/product/`);
-          })
-          .catch((err) => {
-            console.log(err);
-            req.flash("error", "Lỗi khi thêm sản phẩm vào giỏ!");
-            next();
-          });
-      });
-    } else {
-      res.redirect("/login");
-    }
-  }
-
-  // Các phương thức khác cũng cần sửa tương tự...
-  // Tìm tất cả các chỗ có req.session.passport.user.username và thay bằng req.user?.loginInformation?.userName
-
-  postAddToCartMulti(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      var amount = req.body.quantity ? req.body.quantity : 1;
-      product.findOne({ _id: id }, (err, productResult) => {
-        customers
-          .findOneAndUpdate(
-            { "loginInformation.userName": user },
-            {
-              $push: {
-                listProduct: [
-                  {
-                    productID: productResult._id.toString(),
-                    productName: productResult.productName,
-                    productPrice: productResult.description.price,
-                    productImage: productResult.description.imageList[0],
-                    amount: amount,
-                  },
-                ],
-              },
-            }
-          )
-          .then(() => {
-            req.flash("success", "Sản phẩm đã thêm vào giỏ!");
-            res.redirect(`/product/`);
-          })
-          .catch((err) => {
-            console.log(err);
-            req.flash("error", "Lỗi khi thêm sản phẩm vào giỏ!");
-            next();
-          });
-      });
-    } else {
-      res.redirect("/login");
-    }
-  }
-
-  postUpdateQTYInCart(req, res, next) {
-    var id = req.params.id;
-    var quantity = parseInt(req.body.amount);
-    // SỬA Ở ĐÂY
-    var user = req.user?.loginInformation?.userName;
-    customers.updateOne({ "loginInformation.userName": user, "listProduct.productID": id }, { $set: { "listProduct.$.amount": quantity } })
-      .then(() => {
-        res.redirect('/cart');
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-
-  
-
-  getDeleteProductInCart(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      customers.updateMany({ 'loginInformation.userName': user }, { $pull: { listProduct: { productID: id } } })
-        .then(() => {
-          req.flash("success", "Đã xóa sản phẩm khỏi giỏ!");
-          res.redirect('/cart');
-        })
-        .catch((err) => {
-          console.log(err);
-          next();
-        });
-    } else {
-      res.redirect('/login');
-    }
-  }
-
-  getCheckoutPage(req, res, next) {
-    if (req.isAuthenticated()) {
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      customers.findOne({ 'loginInformation.userName': user }, (err, customerResult) => {
-        res.render("checkout", { customer: customerResult });
-      });
-    } else {
-      res.redirect('/login');
-    }
-  }
-
-  postCheckout(req, res, next) {
-    if (req.isAuthenticated()) {
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      var city = req.body.city;
-      var district = req.body.district;
-      var ward = req.body.ward;
-      var address = req.body.address;
-      customers.findOne({ 'loginInformation.userName': user }, (err, customerResult) => {
-        region.findOne({Id: city}, (err, cityResult) => {
-          var cityName = cityResult.Name;
-          var districtData = cityResult.Districts.filter(e => e.Id == district);
-          var districtName = districtData[0].Name;
-          var wardName = districtData[0].Wards.filter(e => e.Id == ward)[0].Name;
-          var data = {
-            'userID': customerResult._id,
-            'displayName': customerResult.fullNameCustomer,
-            'listProduct': customerResult.listProduct,
-            'address': `${address}, ${wardName}, ${districtName}, ${cityName}`,
-            'paymentMethod': parseInt(req.body.payment) == 1 ? "Thanh toán khi nhận hàng" : "Paypal",
-            'resquest': req.body.comment,
-            'status': 'Chờ xác nhận'
-          }
-          var newBill = new bill(data);
-          newBill.save(data)
-            .then(() => {
-              req.flash('success', 'Đặt hàng thành công!');
-              res.redirect('/cart');
-            })
-            .catch((err) => {
-              console.log(err);
-              next();
-          });
-        })
-      })
-    } else {
-      res.redirect('/login');
-    }
-  }
-
-  search(req, res, next) {
-    var key = req.query.search;
-    type.find({}, (err, typeResult) => {
-      supplier.find({}, (err, supplierResult) => {
-        product.find(
-          { productName: { $regex: key, $options: "i" } },
-          (err, productResult) => {
-            if (req.isAuthenticated()) {
-              // SỬA Ở ĐÂY
-              const username = req.user?.loginInformation?.userName;
-              customers.findOne({ 'loginInformation.userName': username }, (err, customerResult) => {
-                res.render("search", {
-                  types: typeResult,
-                  suppliers: supplierResult,
-                  products: productResult,
-                  key: key,
-                  customer: customerResult
-                });
-              });
-            } else {
-              res.render("search", {
-                types: typeResult,
-                suppliers: supplierResult,
-                products: productResult,
-                key: key,
-                customer: undefined
-              });
-            }
-
-          }
-        );
-      });
+    const messageError = req.flash("error");
+    const messageSuccess = req.flash("success");
+    res.render("loginuser", { 
+      message: messageError.length != 0 ? messageError : messageSuccess, 
+      typeMessage: messageSuccess.length != 0 ? 'success': 'error'
     });
+  }
+
+  async debugData(req, res) {
+  try {
+    console.log("=== DEBUG DATA ===");
+    
+    // Test lấy danh mục
+    const types = await type.find({});
+    console.log("Types:", types?.length, types);
+    
+    // Test lấy sản phẩm nổi bật
+    const featured = await product.find({ 
+      "description.featured": true,
+      "description.status": true 
+    });
+    console.log("Featured products:", featured?.length, featured);
+    
+    // Test lấy user
+    if (req.user) {
+      const user = await customers.findOne({ 
+        userName: req.user.loginInformation?.userName 
+      });
+      console.log("User found:", user);
+    }
+    
+    res.json({
+      types: types?.length,
+      featured: featured?.length,
+      user: req.user ? 'logged_in' : 'not_logged_in'
+    });
+    
+  } catch (error) {
+    console.error("Debug error:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+  async getCartPage(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const username = req.user.loginInformation?.userName;
+        const customerResult = await customers.findOne({
+          "loginInformation.userName": username
+        });
+        res.render("cart", { customer: customerResult, message: req.flash('success') });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Lỗi tải giỏ hàng!");
+        res.redirect("/");
+      }
+    } else {
+      res.redirect("/login");
+    }
+  }
+
+  async getAddToCartSingle(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const id = req.params.id;
+        const username = req.user.loginInformation?.userName;
+        const productResult = await product.findById(id);
+        
+        if (!productResult) {
+          req.flash("error", "Không tìm thấy sản phẩm!");
+          return res.redirect(`/product/`);
+        }
+
+        const productData = {
+          productID: productResult._id.toString(),
+          productName: productResult.productName,
+          productPrice: productResult.description.price,
+          productImage: productResult.description.imageList ? productResult.description.imageList[0] : '',
+          amount: 1,
+        };
+
+        await customers.updateCart(username, productData);
+        req.flash("success", "Sản phẩm đã thêm vào giỏ!");
+        res.redirect(`/product/`);
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi thêm sản phẩm vào giỏ!");
+        res.redirect(`/product/`);
+      }
+    } else {
+      res.redirect("/login");
+    }
+  }
+
+  async postAddToCartMulti(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const id = req.params.id;
+        const username = req.user.loginInformation?.userName;
+        const amount = req.body.quantity ? parseInt(req.body.quantity) : 1;
+        const productResult = await product.findById(id);
+        
+        if (!productResult) {
+          req.flash("error", "Không tìm thấy sản phẩm!");
+          return res.redirect(`/product/`);
+        }
+
+        const productData = {
+          productID: productResult._id.toString(),
+          productName: productResult.productName,
+          productPrice: productResult.description.price,
+          productImage: productResult.description.imageList ? productResult.description.imageList[0] : '',
+          amount: amount,
+        };
+
+        await customers.updateCart(username, productData);
+        req.flash("success", "Sản phẩm đã thêm vào giỏ!");
+        res.redirect(`/product/`);
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi thêm sản phẩm vào giỏ!");
+        res.redirect(`/product/`);
+      }
+    } else {
+      res.redirect("/login");
+    }
+  }
+
+  async postUpdateQTYInCart(req, res, next) {
+    try {
+      const id = req.params.id;
+      const quantity = parseInt(req.body.amount);
+      const username = req.user.loginInformation?.userName;
+      
+      await customers.updateCartItem(username, id, quantity);
+      req.flash("success", "Cập nhật số lượng thành công!");
+      res.redirect('/cart');
+    } catch (err) {
+      console.log(err);
+      req.flash("error", "Lỗi khi cập nhật số lượng!");
+      res.redirect('/cart');
+    }
+  }
+
+  async getDeleteProductInCart(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const id = req.params.id;
+        const username = req.user.loginInformation?.userName;
+        
+        await customers.removeFromCart(username, id);
+        req.flash("success", "Đã xóa sản phẩm khỏi giỏ!");
+        res.redirect('/cart');
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi xóa sản phẩm!");
+        res.redirect('/cart');
+      }
+    } else {
+      res.redirect('/login');
+    }
+  }
+
+  async getCheckoutPage(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const username = req.user.loginInformation?.userName;
+        const customerResult = await customers.findOne({ 
+          "loginInformation.userName": username 
+        });
+        
+        if (!customerResult) {
+          req.flash("error", "Không tìm thấy thông tin người dùng!");
+          return res.redirect('/cart');
+        }
+        
+        res.render("checkout", { customer: customerResult });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Lỗi tải trang thanh toán!");
+        res.redirect('/cart');
+      }
+    } else {
+      res.redirect('/login');
+    }
+  }
+
+  async postCheckout(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const username = req.user.loginInformation?.userName;
+        const city = req.body.city;
+        const district = req.body.district;
+        const ward = req.body.ward;
+        const address = req.body.address;
+        
+        const customerResult = await customers.findOne({ 
+          "loginInformation.userName": username 
+        });
+        
+        if (!customerResult) {
+          req.flash("error", "Không tìm thấy thông tin người dùng!");
+          return res.redirect('/checkout');
+        }
+
+        const cityResult = await region.findOne({ Id: city });
+        
+        if (!cityResult) {
+          req.flash("error", "Lỗi xác thực địa chỉ!");
+          return res.redirect('/checkout');
+        }
+
+        const districtData = cityResult.Districts.find(e => e.Id == district);
+        const districtName = districtData?.Name || '';
+        const wardData = districtData?.Wards.find(e => e.Id == ward);
+        const wardName = wardData?.Name || '';
+        
+        const data = {
+          userID: customerResult._id,
+          firstName: customerResult.fullNameCustomer?.firstName,
+          lastName: customerResult.fullNameCustomer?.lastName,
+          listProduct: customerResult.listProduct || [],
+          address: `${address}, ${wardName}, ${districtName}, ${cityResult.Name}`,
+          paymentMethod: parseInt(req.body.payment) == 1 ? "Thanh toán khi nhận hàng" : "Paypal",
+          resquest: req.body.comment || '',
+          status: 'Chờ xác nhận'
+        };
+
+        await bill.create(data);
+        
+        // Xóa giỏ hàng sau khi đặt hàng thành công
+        await customers.findByIdAndUpdate(customerResult._id, {
+          listProduct: JSON.stringify([])
+        });
+
+        req.flash('success', 'Đặt hàng thành công!');
+        res.redirect('/cart');
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi đặt hàng!");
+        res.redirect('/checkout');
+      }
+    } else {
+      res.redirect('/login');
+    }
+  }
+
+  async search(req, res, next) {
+    try {
+      const key = req.query.search;
+      const [typeResult, supplierResult, productResult] = await Promise.all([
+        type.find({}),
+        supplier.find({}),
+        product.searchByName(key)
+      ]);
+
+      if (req.isAuthenticated() && req.user) {
+        const username = req.user.loginInformation?.userName;
+        // SỬA: Tìm customer theo userName
+        const customerResult = await customers.findOne({ 
+          userName: username 
+        });
+        res.render("search", {
+          types: typeResult,
+          suppliers: supplierResult,
+          products: productResult,
+          key: key,
+          customer: customerResult
+        });
+      } else {
+        res.render("search", {
+          types: typeResult,
+          suppliers: supplierResult,
+          products: productResult,
+          key: key,
+          customer: undefined
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      res.render("search", {
+        types: [],
+        suppliers: [],
+        products: [],
+        key: req.query.search,
+        customer: undefined
+      });
+    }
   }
 
   getRegisterPage(req, res, next) {
-    res.render('sign-up', {message: req.flash('success').length != 0 ? req.flash('success') : req.flash('error')});
-  }
-
-  postRegisterUser(req, res, next) {
-    var firstname = req.body.firstname;
-    var lastname = req.body.lastname;
-    var username = req.body.username;
-    var phone = req.body.phone;
-    var cmnd = req.body.cmnd;
-    var email = req.body.email;
-    var password = req.body.password;
-    var re_password = req.body.repassword;
-    customers.findOne({ 'loginInformation.userName': username }, (err, customerResult) => {
-      if (customerResult) {
-        req.flash('error', 'Tài khoản đã tồn tại!');
-        res.redirect('/sign-up')
-      } else {
-        var data = {
-          'fullNameCustomer': {'firstName': firstname, 'lastName': lastname},
-          'dateOfBirth': null,
-          'sex': null,
-          'identityCardNumber': cmnd,
-          'address': null,
-          'phoneNumber': phone,
-          'email': email,
-          'listProduct': [],
-          'listFavorite': [],
-          'loginInformation': {'userName': username, 'password': password, 'type': 'User', roles: []},
-          'avatar': '/uploads/user-01.png'
-        }
-        var newUser = new customers(data);
-        newUser.save()
-        .then(() => {
-          req.flash('success', 'Tạo tài khoản thành công!');
-          res.redirect('/login');
-        })
-        .catch((err) => {
-          console.log(err);
-          req.flash('error', 'Tạo tài khoản không thành công!');
-          res.redirect('/login');
-        });
-      }
+    res.render('sign-up', {
+      message: req.flash('success').length != 0 ? req.flash('success') : req.flash('error')
     });
   }
 
-  getAddFavorite(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      product.findOne({ _id: id }, (err, productResult) => {
-        customers
-          .findOneAndUpdate(
-            { "loginInformation.userName": user },
-            {
-              $push: {
-                listFavorite: [
-                  productResult
-                ],
-              },
-            }
-          )
-          .then(() => {
-            req.flash("success", "Đã thêm vào danh sách yêu thích!");
-            res.redirect(`/product/`);
-          })
-          .catch((err) => {
-            console.log(err);
-            req.flash("error", "Lỗi khi thêm sản phẩm vào danh sách yêu thích!");
-            next();
-          });
-      });
+  async postRegisterUser(req, res, next) {
+  try {
+    const firstname = req.body.firstname;
+    const lastname = req.body.lastname;
+    const username = req.body.username;
+    const phone = req.body.phone;
+    const cmnd = req.body.cmnd;
+    const email = req.body.email;
+    const password = req.body.password;
+    const re_password = req.body.repassword;
+
+    if (password !== re_password) {
+      req.flash('error', 'Mật khẩu xác nhận không khớp!');
+      return res.redirect('/sign-up');
+    }
+
+    // SỬA: Tìm user bằng userName
+    const existingCustomer = await customers.findOne({ 
+      userName: username 
+    });
+    if (existingCustomer) {
+      req.flash('error', 'Tài khoản đã tồn tại!');
+      return res.redirect('/sign-up');
+    }
+
+    const data = {
+      fullNameCustomer: {
+        firstName: firstname,
+        lastName: lastname
+      },
+      dateOfBirth: null,
+      sex: null,
+      identityCardNumber: cmnd,
+      address: null,
+      phoneNumber: phone,
+      email: email,
+      listProduct: [],
+      listFavorite: [],
+      loginInformation: {
+        userName: username,
+        password: password,
+        type: 'User',
+        roles: [],
+        status: true
+      },
+      avatar: '/uploads/user-01.png'
+    };
+
+    await customers.create(data);
+    req.flash('success', 'Tạo tài khoản thành công!');
+    res.redirect('/login');
+  } catch (err) {
+    console.log(err);
+    req.flash('error', 'Tạo tài khoản không thành công!');
+    res.redirect('/sign-up');
+  }
+}
+
+  async getAddFavorite(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const id = req.params.id;
+        const username = req.user.loginInformation?.userName;
+        const productResult = await product.findById(id);
+        
+        if (!productResult) {
+          req.flash("error", "Không tìm thấy sản phẩm!");
+          return res.redirect(`/product/`);
+        }
+
+        await customers.updateFavorites(username, productResult);
+        req.flash("success", "Đã thêm vào danh sách yêu thích!");
+        res.redirect(`/product/`);
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi thêm sản phẩm vào danh sách yêu thích!");
+        res.redirect(`/product/`);
+      }
     } else {
       res.redirect("/login");
     }
   }
 
-  getFavoritePage(req, res, next) {
-    var itemsPerPage = 6;
-    if(req.isAuthenticated()) {
-      // SỬA Ở ĐÂY
-      const username = req.user?.loginInformation?.userName;
-      customers.findOne({'loginInformation.userName': username}, (err, customerResult) => {
-        type.find({}, (err, data) => {
-          supplier.find({}, (err, supplier) => {
-            res.render("favorites", {
-              data: customerResult.listFavorite,
-              types: data,
-              suppliers: supplier,
-              itemsPerPage: itemsPerPage,
-              currentPage: 1,
-              message: req.flash('success'),
-              customer: customerResult
-            });
-          });
+  async getFavoritePage(req, res, next) {
+    try {
+      const itemsPerPage = 6;
+      if (req.isAuthenticated() && req.user) {
+        const username = req.user.loginInformation?.userName;
+        const [customerResult, typeResult, supplierResult] = await Promise.all([
+          customers.findOne({ 
+            "loginInformation.userName": username 
+          }),
+          type.find({}),
+          supplier.find({})
+        ]);
+
+        if (!customerResult) {
+          req.flash("error", "Không tìm thấy thông tin người dùng!");
+          return res.redirect('/');
+        }
+
+        res.render("favorites", {
+          data: customerResult.listFavorite || [],
+          types: typeResult,
+          suppliers: supplierResult,
+          itemsPerPage: itemsPerPage,
+          currentPage: 1,
+          message: req.flash('success'),
+          customer: customerResult
         });
-      });
-    } else {
-      res.redirect('/login');
+      } else {
+        res.redirect('/login');
+      }
+    } catch (err) {
+      console.error(err);
+      req.flash("error", "Lỗi tải trang yêu thích!");
+      res.redirect('/');
     }
   }
 
-  getFavoriteAtPage(req, res, next) {
-    var itemsPerPage = 6;
-    var page = req.params.page;
-    if(req.isAuthenticated()) {
-      // SỬA Ở ĐÂY
-      const username = req.user?.loginInformation?.userName;
-      customers.findOne({'loginInformation.userName': username}, (err, customerResult) => {
-        type.find({}, (err, data) => {
-          supplier.find({}, (err, supplier) => {
-            res.render("favorites", {
-              data: customerResult.listFavorite,
-              types: data,
-              suppliers: supplier,
-              itemsPerPage: itemsPerPage,
-              currentPage: page,
-              message: req.flash('success'),
-              customer: customerResult
-            });
-          });
+  async getFavoriteAtPage(req, res, next) {
+    try {
+      const itemsPerPage = 6;
+      const page = req.params.page;
+      if (req.isAuthenticated() && req.user) {
+        const username = req.user.loginInformation?.userName;
+        const [customerResult, typeResult, supplierResult] = await Promise.all([
+          customers.findOne({ 
+            "loginInformation.userName": username 
+          }),
+          type.find({}),
+          supplier.find({})
+        ]);
+
+        if (!customerResult) {
+          req.flash("error", "Không tìm thấy thông tin người dùng!");
+          return res.redirect('/');
+        }
+
+        res.render("favorites", {
+          data: customerResult.listFavorite || [],
+          types: typeResult,
+          suppliers: supplierResult,
+          itemsPerPage: itemsPerPage,
+          currentPage: page,
+          message: req.flash('success'),
+          customer: customerResult
         });
-      });
-    } else {
-      res.redirect('/login');
+      } else {
+        res.redirect('/login');
+      }
+    } catch (err) {
+      console.error(err);
+      req.flash("error", "Lỗi tải trang yêu thích!");
+      res.redirect('/');
     }
   }
 
-  getDeleteFavorite(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      // SỬA Ở ĐÂY
-      var user = req.user?.loginInformation?.userName;
-      customers.updateMany({ 'loginInformation.userName': user }, { $pull: { listFavorite: { _id: OjectId(id) } } })
-        .then(() => {
-          req.flash("success", "Đã sản phẩm khỏi yêu thích!");
-          res.redirect('/favorite');
-        })
-        .catch((err) => {
-          console.log(err);
-          next();
-        });
+  async getDeleteFavorite(req, res, next) {
+    if (req.isAuthenticated() && req.user) {
+      try {
+        const id = req.params.id;
+        const username = req.user.loginInformation?.userName;
+        
+        await customers.removeFromFavorites(username, id);
+        req.flash("success", "Đã xóa sản phẩm khỏi yêu thích!");
+        res.redirect('/favorite');
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Lỗi khi xóa sản phẩm!");
+        res.redirect('/favorite');
+      }
     } else {
       res.redirect('/login');
     }

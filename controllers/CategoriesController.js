@@ -1,44 +1,57 @@
 // controllers/CategoriesController.js
-const product = require("../models/products");
-const supplier = require("../models/suppliers");
-const type = require("../models/types");
+const product = require("../models-mysql/products");
+const supplier = require("../models-mysql/suppliers");
+const type = require("../models-mysql/types");
 
 class CategoriesController {
-  getList(req, res, next) {
-    var id = req.params.id;
-    var itemsPerPage = 6;
-    req.session.idCategories = id;
-    product.find({ "description.typeCode": id }, (err, result) => {
-      supplier.find({}, (err, supllierResult) => {
-        type.findOne({ _id: id }, (err, typeResult) => {
-          res.render("categories-list-item", {
-            suppliers: supllierResult,
-            products: result,
-            type: typeResult,
-            itemsPerPage: itemsPerPage,
-            currentPage: 1
-          });
-        });
+  async getList(req, res, next) {
+    try {
+      const id = req.params.id;
+      const itemsPerPage = 6;
+      req.session.idCategories = id;
+      
+      const [result, supllierResult, typeResult] = await Promise.all([
+        product.find({ "description.typeCode": id }),
+        supplier.find({}),
+        type.findById(id)
+      ]);
+
+      res.render("categories-list-item", {
+        suppliers: supllierResult,
+        products: result,
+        type: typeResult,
+        itemsPerPage: itemsPerPage,
+        currentPage: 1
       });
-    });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Lỗi server');
+    }
   }
-  getListAtPage(req, res, next) {
-    var id = req.session.idCategories;
-    var itemsPerPage = 6;
-    var currentPage = req.params.page;
-    product.find({ "description.typeCode": id }, (err, result) => {
-      supplier.find({}, (err, supllierResult) => {
-        type.findOne({ _id: id }, (err, typeResult) => {
-          res.render("categories-list-item", {
-            suppliers: supllierResult,
-            products: result,
-            type: typeResult,
-            itemsPerPage: itemsPerPage,
-            currentPage: currentPage
-          });
-        });
+
+  async getListAtPage(req, res, next) {
+    try {
+      const id = req.session.idCategories;
+      const itemsPerPage = 6;
+      const currentPage = req.params.page;
+      
+      const [result, supllierResult, typeResult] = await Promise.all([
+        product.find({ "description.typeCode": id }),
+        supplier.find({}),
+        type.findById(id)
+      ]);
+
+      res.render("categories-list-item", {
+        suppliers: supllierResult,
+        products: result,
+        type: typeResult,
+        itemsPerPage: itemsPerPage,
+        currentPage: currentPage
       });
-    });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Lỗi server');
+    }
   }
 }
 

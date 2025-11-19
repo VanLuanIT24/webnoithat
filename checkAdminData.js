@@ -19,7 +19,7 @@ async function checkAdminData() {
 
     console.log('✅ Kết nối MongoDB thành công!');
 
-    const Admin = require('./models/admin');
+    const Admin = require('./models-mysql/admins');
     
     const admins = await Admin.find({});
     console.log('📊 Tổng số admin:', admins.length);

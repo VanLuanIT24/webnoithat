@@ -1,55 +1,79 @@
 // controllers/AdminController.js
-const type = require("../models/types");
-const supplier = require("../models/suppliers");
-const product = require("../models/products");
-const admin = require("../models/admin");
-const bill = require('../models/bills');
-const region = require("../models/region");
-const customers = require("../models/customers");
+const type = require("../models-mysql/types");
+const supplier = require("../models-mysql/suppliers");
+const product = require("../models-mysql/products");
+const admin = require("../models-mysql/admins");
+const bill = require('../models-mysql/bills');
+const region = require("../models-mysql/regions");
+const customers = require("../models-mysql/customers");
+
 class AdminController {
   // controllers/productController.js
 
-getLoginPage(req, res, next) {
-  res.render("login", { message: req.flash("error") });
-}
+  getLoginPage(req, res, next) {
+    res.render("login", { message: req.flash("error") });
+  }
 
-getDashboardPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    product.find({}, (err, productResult) => {
-      bill.find({}, (err, billResult) => {
-        admin.findOne(
-          { "loginInformation.userName": req.session.passport.user.username },
-          (err, customerResult) => {
-            res.render("dashboard", {
-              message: req.flash("success"),
-              customer: customerResult,
-              abc: billResult,
-              products: productResult
-            });
-          }
-        );
+  // controllers/AdminController.js - Sửa hàm getDashboardPage
+async getDashboardPage(req, res, next) {
+  try {
+    if (req.isAuthenticated() && req.user) {
+      const username = req.user.loginInformation?.userName;
+      
+      // SỬA: Dùng biến 'admin' đã import thay vì 'admins'
+      const adminResult = await admin.findOne({ 
+        userName: username 
       });
-    })
-  } else {
-    res.redirect("/admin/login");
+      
+      if (!adminResult) {
+        req.flash("error", "Không tìm thấy thông tin admin!");
+        return res.redirect('/admin/login');
+      }
+
+      // Lấy dữ liệu thống kê - SỬA: dùng đúng tên biến đã import
+      const [customerCount, productCount, billCount, typeCount] = await Promise.all([
+        customers.countDocuments(),
+        product.countDocuments(),
+        bill.countDocuments(),
+        type.countDocuments()
+      ]);
+
+      // SỬA: Dùng findWithLimit thay vì find().limit()
+      const recentOrders = await bill.findWithLimit({}, 5);
+      
+      res.render("dashboard", {
+        customer: adminResult,
+        customerCount,
+        productCount, 
+        billCount,
+        typeCount,
+        abc: recentOrders, // Thêm dữ liệu đơn hàng
+        products: await product.findWithLimit({}, 10), // Thêm dữ liệu sản phẩm
+        message: req.flash("success") || ''
+      });
+    } else {
+      res.redirect('/admin/login');
+    }
+  } catch (err) {
+    console.error("Lỗi trang dashboard admin:", err);
+    req.flash("error", "Lỗi tải trang dashboard!");
+    res.redirect('/admin/login');
   }
 }
 
-getProductManagerAtPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const numberItemPerpage = 12;
-    const page = req.params.page;
-    
-    product.find({})
-      .then(productResult => {
-        return Promise.all([
-          productResult,
+  async getProductManagerAtPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 12;
+        const page = req.params.page;
+        
+        const [productResult, resultCustomer, supplierResult, typeResult] = await Promise.all([
+          product.find({}),
           admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
           supplier.find({}),
           type.find({})
         ]);
-      })
-      .then(([productResult, resultCustomer, supplierResult, typeResult]) => {
+
         res.render("products-manager", {
           products: productResult,
           customer: resultCustomer,
@@ -59,224 +83,213 @@ getProductManagerAtPage(req, res, next) {
           page: page,
           numberItemPerpage: numberItemPerpage,
         });
-      })
-      .catch(err => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Có lỗi xảy ra khi tải trang quản lý sản phẩm!");
         res.redirect("/admin/dashboard");
-      });
-  } else {
-    res.redirect("/admin/login");
-  }
-}
-
-getAddProductPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    Promise.all([
-      supplier.find({}),
-      type.find({}),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-    ])
-    .then(([supplierResult, typeResult, customerResult]) => {
-      res.render("add-product", {
-        suppliers: supplierResult,
-        types: typeResult,
-        customer: customerResult,
-        message: "",
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang thêm sản phẩm!");
-      res.redirect("/admin/dashboard/products-manager");
-    });
-  } else {
-    res.redirect("/admin/login");
-  }
-}
-
-
-postAddProduct(req, res, next) {
-  if (req.isAuthenticated()) {
-    try {
-      const data = {
-        productName: req.body.productname,
-        description: {
-          imageList: req.files ? req.files.map((image) => `/${image.path}`) : [],
-          productDescription: req.body.description || "",
-          price: parseFloat(req.body.price) || 0,
-          supplierCode: req.body.supplier || "",
-          typeCode: req.body.categories || "",
-          status: req.body.status === 'true',
-          unit: req.body.unit || "Cái",
-          stock: parseInt(req.body.stock) || 0,
-          featured: req.body.featured === 'on',
-          inStock: req.body.inStock !== 'false'
-        },
-        discount: {
-          type: req.body.discountType || "none",
-          value: req.body.discountValue ? parseFloat(req.body.discountValue) : 0,
-          endDate: req.body.discountEndDate ? new Date(req.body.discountEndDate) : null
-        },
-        rating: {
-          average: 0,
-          count: 0,
-          distribution: [0, 0, 0, 0, 0]
-        }
-      };
-
-      // Xử lý discount nếu là none
-      if (data.discount.type === 'none') {
-        data.discount.value = 0;
-        data.discount.endDate = null;
       }
-
-      const newProduct = new product(data);
-      
-      newProduct.save()
-        .then(() => {
-          req.flash("success", "Thêm sản phẩm thành công!");
-          res.redirect("/admin/dashboard/products-manager/");
-        })
-        .catch((err) => {
-          console.error("Lỗi khi lưu sản phẩm:", err);
-          req.flash("error", "Có lỗi xảy ra trong quá trình thêm sản phẩm!");
-          res.redirect("/admin/dashboard/products-manager/add");
-        });
-    } catch (error) {
-      console.error("Lỗi khi xử lý dữ liệu:", error);
-      req.flash("error", "Dữ liệu không hợp lệ!");
-      res.redirect("/admin/dashboard/products-manager/add");
+    } else {
+      res.redirect("/admin/login");
     }
-  } else {
-    res.redirect("/admin/login");
   }
-}
 
-getProductManagerPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const numberItemPerpage = 12;
-    
-    Promise.all([
-      product.find({}),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
-      supplier.find({}),
-      type.find({})
-    ])
-    .then(([productResult, resultCustomer, supplierResult, typeResult]) => {
-      res.render("products-manager", {
-        products: productResult,
-        customer: resultCustomer,
-        types: typeResult,
-        suppliers: supplierResult,
-        message: req.flash("success"),
-        page: 1,
-        numberItemPerpage: numberItemPerpage,
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang quản lý sản phẩm!");
-      res.redirect("/admin/dashboard");
-    });
-  } else {
-    res.redirect("/admin/login");
+  async getAddProductPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const [supplierResult, typeResult, customerResult] = await Promise.all([
+          supplier.find({}),
+          type.find({}),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        res.render("add-product", {
+          suppliers: supplierResult,
+          types: typeResult,
+          customer: customerResult,
+          message: "",
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang thêm sản phẩm!");
+        res.redirect("/admin/dashboard/products-manager");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-getHideProductInfo(req, res, next) {
-  if (req.isAuthenticated()) {
-    const idProduct = req.params.id;
-    
-    product.findOne({ _id: idProduct })
-      .then(productResult => {
+  async postAddProduct(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const data = {
+          productName: req.body.productname,
+          description: {
+            imageList: req.files ? req.files.map((image) => `/${image.path}`) : [],
+            productDescription: req.body.description || "",
+            price: parseFloat(req.body.price) || 0,
+            supplierCode: req.body.supplier || "",
+            typeCode: req.body.categories || "",
+            status: req.body.status === 'true',
+            unit: req.body.unit || "Cái",
+            stock: parseInt(req.body.stock) || 0,
+            featured: req.body.featured === 'on',
+            inStock: req.body.inStock !== 'false'
+          },
+          discount: {
+            type: req.body.discountType || "none",
+            value: req.body.discountValue ? parseFloat(req.body.discountValue) : 0,
+            endDate: req.body.discountEndDate ? new Date(req.body.discountEndDate) : null
+          },
+          rating: {
+            average: 0,
+            count: 0,
+            distribution: [0, 0, 0, 0, 0]
+          }
+        };
+
+        // Xử lý discount nếu là none
+        if (data.discount.type === 'none') {
+          data.discount.value = 0;
+          data.discount.endDate = null;
+        }
+
+        await product.create(data);
+        req.flash("success", "Thêm sản phẩm thành công!");
+        res.redirect("/admin/dashboard/products-manager/");
+      } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm:", error);
+        req.flash("error", "Có lỗi xảy ra trong quá trình thêm sản phẩm!");
+        res.redirect("/admin/dashboard/products-manager/add");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getProductManagerPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 12;
+        
+        const [productResult, resultCustomer, supplierResult, typeResult] = await Promise.all([
+          product.find({}),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+          supplier.find({}),
+          type.find({})
+        ]);
+
+        res.render("products-manager", {
+          products: productResult,
+          customer: resultCustomer,
+          types: typeResult,
+          suppliers: supplierResult,
+          message: req.flash("success"),
+          page: 1,
+          numberItemPerpage: numberItemPerpage,
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang quản lý sản phẩm!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getHideProductInfo(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const idProduct = req.params.id;
+        
+        const productResult = await product.findById(idProduct);
         if (!productResult) {
           req.flash("error", "Không tìm thấy sản phẩm!");
           return res.redirect("/admin/dashboard/products-manager");
         }
         
-        return product.findOneAndUpdate(
-          { _id: idProduct },
-          { "description.status": !productResult.description.status },
-          { new: true }
-        );
-      })
-      .then(() => {
+        const newStatus = !productResult.description.status;
+        await product.findByIdAndUpdate(idProduct, {
+          description: {
+            ...productResult.description,
+            status: newStatus
+          }
+        });
+
         req.flash("success", "Ẩn/Hiển thị thông tin thành công!");
         res.redirect("/admin/dashboard/products-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Ẩn/Hiển thị thông tin không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/products-manager");
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-getDeleteProductInfo(req, res, next) {
-  if (req.isAuthenticated()) {
-    const idProduct = req.params.id;
-    
-    product.findOneAndDelete({ _id: idProduct })
-      .then((result) => {
+  async getDeleteProductInfo(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const idProduct = req.params.id;
+        
+        const result = await product.findByIdAndDelete(idProduct);
         if (!result) {
           req.flash("error", "Không tìm thấy sản phẩm để xóa!");
           return res.redirect("/admin/dashboard/products-manager");
         }
+        
         req.flash("success", "Xóa thông tin thành công!");
         res.redirect("/admin/dashboard/products-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Xóa thông tin không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/products-manager");
-      });
-  } else {
-    res.redirect("/admin/login");
-  }
-}
-
-getUpdateProductPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const idProduct = req.params.id;
-    
-    Promise.all([
-      product.findOne({ _id: idProduct }),
-      type.find({}),
-      supplier.find({}),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-    ])
-    .then(([productResult, typeResult, supplierResult, customerResult]) => {
-      if (!productResult) {
-        req.flash("error", "Không tìm thấy sản phẩm!");
-        return res.redirect("/admin/dashboard/products-manager");
       }
-      
-      res.render("update-product", {
-        customer: customerResult,
-        product: productResult,
-        types: typeResult,
-        suppliers: supplierResult,
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang cập nhật sản phẩm!");
-      res.redirect("/admin/dashboard/products-manager");
-    });
-  } else {
-    res.redirect("/admin/login");
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-postUpdateProductPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const idProduct = req.params.id;
-    
-    product.findOne({ _id: idProduct })
-      .then(productResult => {
+  async getUpdateProductPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const idProduct = req.params.id;
+        
+        const [productResult, typeResult, supplierResult, customerResult] = await Promise.all([
+          product.findById(idProduct),
+          type.find({}),
+          supplier.find({}),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        if (!productResult) {
+          req.flash("error", "Không tìm thấy sản phẩm!");
+          return res.redirect("/admin/dashboard/products-manager");
+        }
+        
+        res.render("update-product", {
+          customer: customerResult,
+          product: productResult,
+          types: typeResult,
+          suppliers: supplierResult,
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang cập nhật sản phẩm!");
+        res.redirect("/admin/dashboard/products-manager");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async postUpdateProductPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const idProduct = req.params.id;
+        
+        const productResult = await product.findById(idProduct);
         if (!productResult) {
           req.flash("error", "Không tìm thấy sản phẩm!");
           return res.redirect("/admin/dashboard/products-manager");
@@ -331,498 +344,564 @@ postUpdateProductPage(req, res, next) {
           rating: ratingData
         };
 
-        return product.findOneAndUpdate(
-          { _id: idProduct }, 
-          updateData, 
-          { new: true, runValidators: true }
-        );
-      })
-      .then(() => {
+        await product.findByIdAndUpdate(idProduct, updateData);
         req.flash("success", "Cập nhật thông tin thành công!");
         res.redirect("/admin/dashboard/products-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Cập nhật thông tin không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/products-manager/update/" + idProduct);
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getCategoriesManagerPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 6;
+        const [customerResult, typeResult] = await Promise.all([
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+          type.find({})
+        ]);
+
+        res.render('categories-manager', {
+          customer: customerResult,
+          categories: typeResult,
+          page: 1,
+          numberItemPerpage: numberItemPerpage,
+          message: req.flash("success")
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang quản lý danh mục!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  }
+
+  async getCategoriesManagerAtPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 6;
+        const page = req.params.page;
+        const [customerResult, typeResult] = await Promise.all([
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+          type.find({})
+        ]);
+
+        res.render('categories-manager', {
+          customer: customerResult,
+          categories: typeResult,
+          page: page,
+          numberItemPerpage: numberItemPerpage,
+          message: req.flash("success")
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang quản lý danh mục!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  }
+
+  async getUpdateCategoriesPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const id = req.params.id;
+        const [typeResult, customerResult] = await Promise.all([
+          type.findById(id),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        res.render('update-categories', {
+          type: typeResult, 
+          customer: customerResult,
+          message: req.flash("success") || req.flash("error") || ''
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang cập nhật danh mục!");
+        res.redirect("/admin/dashboard/categories-manager");
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  }
+
+  async getAddCategoriesPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const customerResult = await admin.findOne({ "loginInformation.userName": req.session.passport.user.username });
+        res.render('add-categories', { customer: customerResult });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang thêm danh mục!");
+        res.redirect("/admin/dashboard/categories-manager");
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  }
+
+  async postAddCategories(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const data = {
+          typeName: req.body.name,
+          thumbnail: req.file ? `/${req.file.path}` : '',
+          status: req.body.status === 'on' || req.body.status === 'true'
+        };
+
+        await type.create(data);
+        req.flash('success', 'Thêm danh mục thành công!');
+        res.redirect('/admin/dashboard/categories-manager/');
+      } catch (err) {
+        console.log(err);
+        req.flash('error', 'Thêm danh mục không thành công! Có lỗi xảy ra!');
+        res.redirect('/admin/dashboard/categories-manager/add');
+      }
+    } else {
+      res.redirect('/admin/login');
+    }
+  }
+
+  async postUpdateCategoriesPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const id = req.params.id;
+        const typeResult = await type.findById(id);
+        if (!typeResult) {
+          req.flash("error", "Không tìm thấy danh mục!");
+          return res.redirect("/admin/dashboard/categories-manager");
+        }
+        
+        const data = {
+          typeName: req.body.name,
+          thumbnail: req.file ? `/${req.file.path}` : typeResult.thumbnail,
+          status: req.body.status === 'on' || req.body.status === 'true'
+        };
+        
+        await type.findByIdAndUpdate(id, data);
+        req.flash("success", "Cập nhật thông tin danh mục thành công!");
+        res.redirect("/admin/dashboard/categories-manager");
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Cập nhật thông tin danh mục không thành công! Có lỗi xảy ra!");
+        res.redirect("/admin/dashboard/categories-manager/update/" + id);
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getDeleteCategoriesInfo(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const id = req.params.id;
+        await type.findByIdAndDelete(id);
+        req.flash("success", "Xóa danh mục thành công!");
+        res.redirect("/admin/dashboard/categories-manager");
+      } catch (err) {
+        console.log(err);
+        req.flash("error", "Xóa danh mục không thành công! Có lỗi xảy ra!");
+        res.redirect("/admin/dashboard/categories-manager");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  // Sửa hàm getOrdersManagerPage
+async getOrdersManagerPage(req, res, next) {
+  if (req.isAuthenticated()) {
+    try {
+      const numberItemPerpage = 6;
+      const [customerResult, billResult] = await Promise.all([
+        admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+        bill.find({})
+      ]);
+
+      // Lọc bills không phải "Chờ xác nhận"
+      const filteredBills = billResult.filter(b => b.status !== 'Chờ xác nhận');
+
+      console.log('📦 Orders found:', filteredBills.length);
+
+      res.render('orders-manager', {
+        customer: customerResult,
+        bills: filteredBills,
+        page: 1,
+        numberItemPerpage: numberItemPerpage,
+        message: req.flash("success")
       });
+    } catch (err) {
+      console.error("❌ Lỗi getOrdersManagerPage:", err);
+      req.flash("error", "Có lỗi xảy ra khi tải trang quản lý đơn hàng!");
+      res.redirect("/admin/dashboard");
+    }
   } else {
     res.redirect("/admin/login");
   }
 }
 
-  getCategoriesManagerPage(req, res, next) {
-    var numberItemPerpage = 6;
-    if(req.isAuthenticated()) {
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        type.find({}, (err, typeResult) => {
-          res.render('categories-manager', {
-            customer: customerResult,
-            categories: typeResult,
-            page: 1,
-            numberItemPerpage: numberItemPerpage,
-            message: req.flash("success")
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  getCategoriesManagerAtPage(req, res, next) {
-    if(req.isAuthenticated()) {
-      var numberItemPerpage = 6;
-      var page = req.params.page;
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        type.find({}, (err, typeResult) => {
-          res.render('categories-manager', {
-            customer: customerResult,
-            categories: typeResult,
-            page: page,
-            numberItemPerpage: numberItemPerpage,
-            message: req.flash("success")
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  getUpdateCategoriesPage(req, res, next) {
-    if(req.isAuthenticated()) {
-      var id = req.params.id;
-      type.findOne({_id: id}, (err, typeResult) => {
-        admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-          res.render('update-categories', {type: typeResult, customer: customerResult});
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  getAddCategoriesPage(req, res, next) {
-    if(req.isAuthenticated()) {
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        res.render('add-categories', {customer: customerResult});
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  postAddCategories(req, res, next) {
-    if(req.isAuthenticated()) {
-      var data = {
-        'typeName': req.body.name,
-        'thumbnail': `/${req.file.path}`,
-        'status': req.body.status === 'on' || req.body.status === 'true'  // <-- SỬA Ở ĐÂY
-      }
-      var newCategories = new type(data);
-      newCategories.save()
-      .then(() => {
-        req.flash('success', 'Thêm danh mục thành công!');
-        res.redirect('/admin/dashboard/categories-manager/');
-      })
-      .catch((err) => {
-        console.log(err);
-        req.flash('error', 'Thêm danh mục không thành công! Có lỗi xảy ra!');
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-}
-getUpdateCategoriesPage(req, res, next) {
-    if(req.isAuthenticated()) {
-      var id = req.params.id;
-      type.findOne({_id: id}, (err, typeResult) => {
-        if (err) {
-          req.flash('error', 'Không tìm thấy danh mục!');
-          return res.redirect('/admin/dashboard/categories-manager');
-        }
-        admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-          res.render('update-categories', {
-            type: typeResult, 
-            customer: customerResult,
-            message: req.flash("success") || req.flash("error") || ''
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-}
+// Sửa hàm getPendingOrderPage
+async getPendingOrderPage(req, res, next) {
+  if (req.isAuthenticated()) {
+    try {
+      const numberItemPerpage = 6;
+      const [customerResult, billResult] = await Promise.all([
+        admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+        bill.find({ status: 'Chờ xác nhận' })
+      ]);
 
-postUpdateCategoriesPage(req, res, next) {
-    if (req.isAuthenticated()) {
-        var id = req.params.id;
-        type.findOne({ _id: id }, (err, typeResult) => {
-            if (err) {
-                req.flash("error", "Không tìm thấy danh mục!");
-                return res.redirect("/admin/dashboard/categories-manager");
-            }
-            
-            var data = {
-                typeName: req.body.name,
-                thumbnail: req.file ? `/${req.file.path}` : typeResult.thumbnail,
-                status: req.body.status === 'on' || req.body.status === 'true'
-            };
-            
-            type.findOneAndUpdate({ _id: id }, data, { new: true })
-                .then(() => {
-                    req.flash("success", "Cập nhật thông tin danh mục thành công!");
-                    res.redirect("/admin/dashboard/categories-manager");
-                })
-                .catch((err) => {
-                    console.log(err);
-                    req.flash("error", "Cập nhật thông tin danh mục không thành công! Có lỗi xảy ra!");
-                    res.redirect("/admin/dashboard/categories-manager/update/" + id);
-                });
-        });
-    } else {
-        res.redirect("/admin/login");
-    }
-}
+      console.log('⏳ Pending orders found:', billResult.length);
 
-  getDeleteCategoriesInfo(req, res, next) {
-    if (req.isAuthenticated()) {
-      var id = req.params.id;
-      type.findOneAndRemove({ _id: id }, (err, result) => {
-        if (err) {
-          console.log(err);
-          req.flash("error", "Xóa danh mục không thành công! Có lỗi xảy ra!");
-          next();
-        }
-        req.flash("success", "Xóa danh mục thành công!");
-        res.redirect("/admin/dashboard/categories-manager");
+      res.render('pending-order', {
+        customer: customerResult,
+        bills: billResult,
+        page: 1,
+        numberItemPerpage: numberItemPerpage,
+        message: req.flash("success")
       });
-    } else {
-      res.redirect("/admin/login");
+    } catch (err) {
+      console.error("❌ Lỗi getPendingOrderPage:", err);
+      req.flash("error", "Có lỗi xảy ra khi tải trang đơn hàng chờ xác nhận!");
+      res.redirect("/admin/dashboard");
     }
-  }
-  getOrdersManagerPage(req, res, next) {
-    var numberItemPerpage = 6;
-    if(req.isAuthenticated()) {
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        bill.find({status: {$nin: ['Chờ xác nhận']}}, (err, billResult) => {
-          res.render('orders-manager', {
-            customer: customerResult,
-            bills: billResult,
-            page: 1,
-            numberItemPerpage: numberItemPerpage,
-            message: req.flash("success")
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  getPendingOrderPage(req, res, next) {
-    var numberItemPerpage = 6;
-    if(req.isAuthenticated()) {
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        bill.find({status: 'Chờ xác nhận'}, (err, billResult) => {
-          res.render('pending-order', {
-            customer: customerResult,
-            bills: billResult,
-            page: 1,
-            numberItemPerpage: numberItemPerpage,
-            message: req.flash("success")
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  
-  getPendingOrderAtPage(req, res, next) {
-    var numberItemPerpage = 6;
-    var page = req.params.page;
-    if(req.isAuthenticated()) {
-      admin.findOne({"loginInformation.userName": req.session.passport.user.username}, (err, customerResult) => {
-        bill.find({status: 'Chờ xác nhận'}, (err, billResult) => {
-          res.render('pending-order', {
-            customer: customerResult,
-            bills: billResult,
-            page: page,
-            numberItemPerpage: numberItemPerpage,
-            message: req.flash("success")
-          });
-        });
-      });
-    } else {
-      res.redirect('/admin/login');
-    }
-  }
-  getUpdateStatusOrder(req, res, next) {
-    var id = req.params.id;
-    var data = {status: 'Chuẩn bị hàng'}
-    bill.findOneAndUpdate({_id: id}, data, {new: true})
-    .then(() => {
-      req.flash("success", "Đã xác nhận đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    })
-    .catch((err) => {
-      console.log(err);
-      req.flash("error", "Lỗi xác nhận đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    });
-  }
-  getDeleteStatusOrder(req, res, next) {
-    var id = req.params.id;
-    var data = {status: 'Đã hủy'}
-    bill.findOneAndUpdate({_id: id}, data, {new: true})
-    .then(() => {
-      req.flash("success", "Đã hủy đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    })
-    .catch((err) => {
-      console.log(err);
-      req.flash("error", "Lỗi hủy đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    });
-  }
-  getUpdateAllStatusOrder(req, res, next) {
-    var data = {status: 'Chuẩn bị hàng'}
-    bill.updateMany({}, {$set: data}, {new: true})
-    .then(() => {
-      req.flash("success", "Đã xác nhận đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    })
-    .catch((err) => {
-      console.log(err);
-      req.flash("error", "Lỗi xác nhận đơn hàng!");
-      res.redirect('/admin/dashboard/pending-orders-manager');
-    });
-  }
-  getUpdateOrder(req, res, next) {
-    var id = req.params.id;
-    var user = req.session.passport.user.username;
-    admin.findOne({'loginInformation.userName': user}, (err, customerResult) => {
-      bill.findOne({_id: id}, (err, billResult) => {
-        if (err) {
-          console.log(err);
-          req.flash("error", "Lỗi tải thông tin đơn hàng!");
-          return res.redirect('/admin/dashboard/orders-manager');
-        }
-        
-        if (!billResult) {
-          req.flash("error", "Đơn hàng không tồn tại!");
-          return res.redirect('/admin/dashboard/orders-manager');
-        }
-        
-        res.render('update-order', {
-          customer: customerResult, 
-          bill: billResult,
-          message: req.flash("success")
-        });
-      });
-    });
-}
-
-postUpdateOrder(req, res, next) {
-    var id = req.params.id;
-    var fullName = req.body.name;
-    var lastIndexSpace = fullName.lastIndexOf(' ');
-    var firstName = fullName.slice(0, lastIndexSpace);
-    var lastName = fullName.slice(lastIndexSpace + 1, fullName.length);
-    var city = req.body.city;
-    var district = req.body.district;
-    var ward = req.body.ward;
-    var address = req.body.address;
-    var status = req.body.status;
-    
-    region.findOne({Id: city}, (err, cityResult) => {
-      if (err || !cityResult) {
-        console.log(err);
-        req.flash('error', 'Lỗi xác thực địa chỉ!');
-        return res.redirect('/admin/dashboard/orders-manager/update/' + id);
-      }
-      
-      var districtData = cityResult.Districts.filter(e => e.Id == district);
-      var districtName = districtData[0]?.Name || '';
-      var wardName = districtData[0]?.Wards.filter(e => e.Id == ward)[0]?.Name || '';
-      
-      var data = {
-        'displayName': {firstName: firstName, lastName: lastName},
-        'address': `${address}, ${wardName}, ${districtName}, ${cityResult.Name}`,
-        'status': status
-      }
-      
-      bill.findOneAndUpdate({_id: id}, {$set: data}, {new: true})
-      .then(() => {
-        // Xóa bản nháp sau khi cập nhật thành công
-        // localStorage.removeItem('orderDraft_' + id);
-        
-        req.flash('success', 'Cập nhật thông tin đơn hàng thành công!');
-        res.redirect('/admin/dashboard/orders-manager');
-      })
-      .catch((err) => {
-        console.log(err);
-        req.flash('error', 'Cập nhật thông tin đơn hàng không thành công!');
-        res.redirect('/admin/dashboard/orders-manager/update/' + id);
-      });
-    });
-}
-  getDeleteOrder(req, res, next) {
-    var id = req.params.id;
-    var data = {status: 'Đã hủy'}
-    bill.findOneAndUpdate({_id: id}, data, {new: true})
-    .then(() => {
-      req.flash("success", "Đã hủy đơn hàng!");
-      res.redirect('/admin/dashboard/orders-manager');
-    })
-    .catch((err) => {
-      console.log(err);
-      req.flash("error", "Lỗi hủy đơn hàng!");
-      res.redirect('/admin/dashboard/orders-manager');
-    });
-  }
-
-  // Xem chi tiết đơn hàng
-getOrderDetail(req, res, next) {
-  var id = req.params.id;
-  var user = req.session.passport.user.username;
-  
-  if(req.isAuthenticated()) {
-    admin.findOne({'loginInformation.userName': user}, (err, customerResult) => {
-      bill.findOne({_id: id})
-        .populate('userID') // Nếu có liên kết với user
-        .exec((err, billResult) => {
-          if (err) {
-            console.log(err);
-            req.flash("error", "Lỗi tải thông tin đơn hàng!");
-            return res.redirect('back');
-          }
-          
-          if (!billResult) {
-            req.flash("error", "Đơn hàng không tồn tại!");
-            return res.redirect('back');
-          }
-          
-          // Tính tổng tiền
-          let totalAmount = 0;
-          let totalProducts = 0;
-          billResult.listProduct.forEach(product => {
-            totalAmount += parseInt(product.productPrice) * product.amount;
-            totalProducts += parseInt(product.amount);
-          });
-          
-          res.render('order-detail', {
-            customer: customerResult,
-            bill: billResult,
-            totalAmount: totalAmount,
-            totalProducts: totalProducts,
-            message: req.flash("success")
-          });
-        });
-    });
   } else {
     res.redirect('/admin/login');
   }
 }
 
-getLogout(req, res, next) {
-  req.logout();
-  res.redirect('/admin/login');
-}
-
-
-// Quản lý người dùng
-getUsersManagerPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const numberItemPerpage = 10;
+// Sửa hàm getUpdateOrder - QUAN TRỌNG
+async getUpdateOrder(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🔍 Getting order for update:', id);
     
-    Promise.all([
-      customers.find({}),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-    ])
-    .then(([usersResult, customerResult]) => {
-      res.render("users-manager", {
-        users: usersResult,
-        customer: customerResult,
-        message: req.flash("success"),
-        page: 1,
-        numberItemPerpage: numberItemPerpage,
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang quản lý người dùng!");
-      res.redirect("/admin/dashboard");
+    const user = req.session.passport.user.username;
+    const [customerResult, billResult] = await Promise.all([
+      admin.findOne({ 'loginInformation.userName': user }),
+      bill.findById(id)
+    ]);
+
+    if (!billResult) {
+      console.log('❌ Order not found:', id);
+      req.flash("error", "Đơn hàng không tồn tại!");
+      return res.redirect('/admin/dashboard/orders-manager');
+    }
+    
+    console.log('✅ Order found:', billResult._id);
+    
+    res.render('update-order', {
+      customer: customerResult, 
+      bill: billResult,
+      message: req.flash("success") || req.flash("error") || ''
     });
-  } else {
-    res.redirect("/admin/login");
+  } catch (err) {
+    console.error("❌ Lỗi getUpdateOrder:", err);
+    req.flash("error", "Lỗi tải thông tin đơn hàng!");
+    res.redirect('/admin/dashboard/orders-manager');
   }
 }
 
-getUsersManagerAtPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const numberItemPerpage = 10;
-    const page = req.params.page;
+// Sửa hàm postUpdateOrder - QUAN TRỌNG
+async postUpdateOrder(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🔄 Updating order:', id);
+    console.log('📝 Update data:', req.body);
+
+    const {
+      name,
+      city,
+      district,
+      ward,
+      address,
+      status
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !city || !district || !ward || !address || !status) {
+      req.flash('error', 'Vui lòng điền đầy đủ thông tin!');
+      return res.redirect('/admin/dashboard/orders-manager/update/' + id);
+    }
+
+    // Tách tên
+    const nameParts = name.split(' ');
+    const firstName = nameParts.slice(0, -1).join(' ');
+    const lastName = nameParts.slice(-1).join(' ');
+
+    // Lấy thông tin địa chỉ
+    let fullAddress = address;
+    try {
+      const cityResult = await region.findOne({ Id: city });
+      if (cityResult) {
+        const districtData = cityResult.Districts.find(d => d.Id == district);
+        if (districtData) {
+          const wardData = districtData.Wards.find(w => w.Id == ward);
+          if (wardData) {
+            fullAddress = `${address}, ${wardData.Name}, ${districtData.Name}, ${cityResult.Name}`;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Lỗi xử lý địa chỉ:', error.message);
+      // Vẫn tiếp tục với địa chỉ đã nhập
+    }
+
+    // Dữ liệu cập nhật
+    const updateData = {
+      firstName: firstName,
+      lastName: lastName,
+      address: fullAddress,
+      status: status,
+      updatedAt: new Date()
+    };
+
+    console.log('📦 Update data to save:', updateData);
+
+    // Cập nhật đơn hàng
+    const result = await bill.findByIdAndUpdate(id, updateData);
     
-    Promise.all([
-      customers.find({}),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-    ])
-    .then(([usersResult, customerResult]) => {
-      res.render("users-manager", {
-        users: usersResult,
-        customer: customerResult,
-        message: req.flash("success"),
-        page: page,
-        numberItemPerpage: numberItemPerpage,
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang quản lý người dùng!");
-      res.redirect("/admin/dashboard");
-    });
-  } else {
-    res.redirect("/admin/login");
+    if (!result) {
+      req.flash('error', 'Không tìm thấy đơn hàng để cập nhật!');
+      return res.redirect('/admin/dashboard/orders-manager/update/' + id);
+    }
+
+    console.log('✅ Order updated successfully');
+    req.flash('success', 'Cập nhật thông tin đơn hàng thành công!');
+    res.redirect('/admin/dashboard/orders-manager');
+  } catch (err) {
+    console.error("❌ Lỗi postUpdateOrder:", err);
+    req.flash('error', 'Cập nhật thông tin đơn hàng không thành công: ' + err.message);
+    res.redirect('/admin/dashboard/orders-manager/update/' + req.params.id);
   }
 }
 
-getUpdateUserPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const userId = req.params.id;
+// Sửa hàm getUpdateStatusOrder
+async getUpdateStatusOrder(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🔄 Updating order status to preparing:', id);
     
-    Promise.all([
-      customers.findOne({ _id: userId }),
-      admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-    ])
-    .then(([userResult, customerResult]) => {
-      if (!userResult) {
-        req.flash("error", "Không tìm thấy người dùng!");
-        return res.redirect("/admin/dashboard/users-manager");
+    const result = await bill.findByIdAndUpdate(id, { 
+      status: 'Chuẩn bị hàng',
+      updatedAt: new Date()
+    });
+    
+    if (!result) {
+      req.flash("error", "Không tìm thấy đơn hàng!");
+      return res.redirect('/admin/dashboard/pending-orders-manager');
+    }
+    
+    console.log('✅ Order status updated successfully');
+    req.flash("success", "Đã xác nhận đơn hàng!");
+    res.redirect('/admin/dashboard/pending-orders-manager');
+  } catch (err) {
+    console.error("❌ Lỗi getUpdateStatusOrder:", err);
+    req.flash("error", "Lỗi xác nhận đơn hàng!");
+    res.redirect('/admin/dashboard/pending-orders-manager');
+  }
+}
+
+// Sửa hàm getDeleteStatusOrder
+async getDeleteStatusOrder(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🗑️ Cancelling order:', id);
+    
+    const result = await bill.findByIdAndUpdate(id, { 
+      status: 'Đã hủy',
+      updatedAt: new Date()
+    });
+    
+    if (!result) {
+      req.flash("error", "Không tìm thấy đơn hàng!");
+      return res.redirect('/admin/dashboard/pending-orders-manager');
+    }
+    
+    console.log('✅ Order cancelled successfully');
+    req.flash("success", "Đã hủy đơn hàng!");
+    res.redirect('/admin/dashboard/pending-orders-manager');
+  } catch (err) {
+    console.error("❌ Lỗi getDeleteStatusOrder:", err);
+    req.flash("error", "Lỗi hủy đơn hàng!");
+    res.redirect('/admin/dashboard/pending-orders-manager');
+  }
+}
+
+// Sửa hàm getDeleteOrder
+async getDeleteOrder(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🗑️ Deleting order:', id);
+    
+    const result = await bill.findByIdAndUpdate(id, { 
+      status: 'Đã hủy',
+      updatedAt: new Date()
+    });
+    
+    if (!result) {
+      req.flash("error", "Không tìm thấy đơn hàng!");
+      return res.redirect('/admin/dashboard/orders-manager');
+    }
+    
+    console.log('✅ Order deleted successfully');
+    req.flash("success", "Đã hủy đơn hàng!");
+    res.redirect('/admin/dashboard/orders-manager');
+  } catch (err) {
+    console.error("❌ Lỗi getDeleteOrder:", err);
+    req.flash("error", "Lỗi hủy đơn hàng!");
+    res.redirect('/admin/dashboard/orders-manager');
+  }
+}
+
+// Sửa hàm getOrderDetail
+async getOrderDetail(req, res, next) {
+  try {
+    const id = req.params.id;
+    console.log('🔍 Getting order details:', id);
+    
+    if (req.isAuthenticated()) {
+      const user = req.session.passport.user.username;
+      const [customerResult, billResult] = await Promise.all([
+        admin.findOne({ 'loginInformation.userName': user }),
+        bill.findById(id)
+      ]);
+
+      if (!billResult) {
+        console.log('❌ Order not found for detail:', id);
+        req.flash("error", "Đơn hàng không tồn tại!");
+        return res.redirect('back');
       }
       
-      res.render("update-user", {
-        customer: customerResult,
-        user: userResult,
-        message: req.flash("success") || req.flash("error") || ''
+      // Tính tổng tiền
+      let totalAmount = 0;
+      let totalProducts = 0;
+      billResult.listProduct.forEach(product => {
+        totalAmount += parseInt(product.productPrice || 0) * (product.amount || 1);
+        totalProducts += parseInt(product.amount || 1);
       });
-    })
-    .catch(err => {
-      console.error(err);
-      req.flash("error", "Có lỗi xảy ra khi tải trang cập nhật người dùng!");
-      res.redirect("/admin/dashboard/users-manager");
-    });
-  } else {
-    res.redirect("/admin/login");
+      
+      console.log('✅ Order detail loaded successfully');
+      
+      res.render('order-detail', {
+        customer: customerResult,
+        bill: billResult,
+        totalAmount: totalAmount,
+        totalProducts: totalProducts,
+        message: req.flash("success")
+      });
+    } else {
+      res.redirect('/admin/login');
+    }
+  } catch (err) {
+    console.error("❌ Lỗi getOrderDetail:", err);
+    req.flash("error", "Lỗi tải thông tin đơn hàng!");
+    res.redirect('back');
   }
 }
 
-postUpdateUserPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    const userId = req.params.id;
-    
-    console.log('Request body:', req.body); // Debug
-    console.log('Request file:', req.file); // Debug
-    
-    customers.findOne({ _id: userId })
-      .then(userResult => {
+  getLogout(req, res, next) {
+    req.logout();
+    res.redirect('/admin/login');
+  }
+
+  // Quản lý người dùng
+  async getUsersManagerPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 10;
+        const [usersResult, customerResult] = await Promise.all([
+          customers.find({}),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        res.render("users-manager", {
+          users: usersResult,
+          customer: customerResult,
+          message: req.flash("success"),
+          page: 1,
+          numberItemPerpage: numberItemPerpage,
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang quản lý người dùng!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getUsersManagerAtPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 10;
+        const page = req.params.page;
+        const [usersResult, customerResult] = await Promise.all([
+          customers.find({}),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        res.render("users-manager", {
+          users: usersResult,
+          customer: customerResult,
+          message: req.flash("success"),
+          page: page,
+          numberItemPerpage: numberItemPerpage,
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang quản lý người dùng!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async getUpdateUserPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const userId = req.params.id;
+        const [userResult, customerResult] = await Promise.all([
+          customers.findById(userId),
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
+        ]);
+
+        if (!userResult) {
+          req.flash("error", "Không tìm thấy người dùng!");
+          return res.redirect("/admin/dashboard/users-manager");
+        }
+        
+        res.render("update-user", {
+          customer: customerResult,
+          user: userResult,
+          message: req.flash("success") || req.flash("error") || ''
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang cập nhật người dùng!");
+        res.redirect("/admin/dashboard/users-manager");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
+  }
+
+  async postUpdateUserPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const userId = req.params.id;
+        
+        const userResult = await customers.findById(userId);
         if (!userResult) {
           req.flash("error", "Không tìm thấy người dùng!");
           return res.redirect("/admin/dashboard/users-manager");
@@ -830,8 +909,8 @@ postUpdateUserPage(req, res, next) {
 
         // Tạo object update data
         const updateData = {
-          'fullNameCustomer.firstName': req.body.firstname,
-          'fullNameCustomer.lastName': req.body.lastname,
+          firstName: req.body.firstname,
+          lastName: req.body.lastname,
           dateOfBirth: req.body.dateOfBirth,
           sex: req.body.sex,
           identityCardNumber: req.body.identityCardNumber,
@@ -844,98 +923,123 @@ postUpdateUserPage(req, res, next) {
         // Xử lý avatar nếu có file upload
         if (req.file) {
           updateData.avatar = `/uploads/${req.file.filename}`;
-          console.log('New avatar path:', updateData.avatar); // Debug
         }
 
         // Xử lý mật khẩu nếu có
         if (req.body.password && req.body.password.trim() !== '') {
-          updateData['loginInformation.password'] = req.body.password;
+          updateData.password = req.body.password;
         }
 
-        console.log('Final update data:', updateData); // Debug
-
-        return customers.findOneAndUpdate(
-          { _id: userId }, 
-          { $set: updateData }, 
-          { new: true }
-        );
-      })
-      .then((updatedUser) => {
-        console.log('User updated successfully:', updatedUser); // Debug
+        await customers.findByIdAndUpdate(userId, updateData);
         req.flash("success", "Cập nhật thông tin người dùng thành công!");
         res.redirect("/admin/dashboard/users-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Lỗi khi cập nhật:", err);
         req.flash("error", "Cập nhật thông tin người dùng không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/users-manager/update/" + userId);
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-getDeleteUserInfo(req, res, next) {
-  if (req.isAuthenticated()) {
-    const userId = req.params.id;
-    
-    customers.findOneAndDelete({ _id: userId })
-      .then((result) => {
+  async getPendingOrderAtPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const numberItemPerpage = 6;
+        const page = req.params.page;
+        const [customerResult, billResult] = await Promise.all([
+          admin.findOne({ "loginInformation.userName": req.session.passport.user.username }),
+          bill.find({ status: 'Chờ xác nhận' })
+        ]);
+
+        res.render('pending-order', {
+          customer: customerResult,
+          bills: billResult,
+          page: page,
+          numberItemPerpage: numberItemPerpage,
+          message: req.flash("success")
+        });
+      } catch (err) {
+        console.error(err);
+        req.flash("error", "Có lỗi xảy ra khi tải trang đơn hàng chờ xác nhận!");
+        res.redirect("/admin/dashboard");
+      }
+    } else {
+      res.redirect('/admin/login');
+    }  
+  }
+
+  async getDeleteUserInfo(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const userId = req.params.id;
+        const result = await customers.findByIdAndDelete(userId);
         if (!result) {
           req.flash("error", "Không tìm thấy người dùng để xóa!");
           return res.redirect("/admin/dashboard/users-manager");
         }
         req.flash("success", "Xóa người dùng thành công!");
         res.redirect("/admin/dashboard/users-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Xóa người dùng không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/users-manager");
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-getBlockUserInfo(req, res, next) {
-  if (req.isAuthenticated()) {
-    const userId = req.params.id;
-    
-    customers.findOne({ _id: userId })
-      .then(userResult => {
+  async getBlockUserInfo(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const userId = req.params.id;
+        const userResult = await customers.findById(userId);
         if (!userResult) {
           req.flash("error", "Không tìm thấy người dùng!");
           return res.redirect("/admin/dashboard/users-manager");
         }
         
         const newStatus = !userResult.loginInformation.status;
-        
-        return customers.findOneAndUpdate(
-          { _id: userId },
-          { "loginInformation.status": newStatus },
-          { new: true }
-        );
-      })
-      .then(() => {
+        await customers.findByIdAndUpdate(userId, {
+          status: newStatus
+        });
+
         req.flash("success", "Khóa/Mở khóa người dùng thành công!");
         res.redirect("/admin/dashboard/users-manager");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Khóa/Mở khóa người dùng không thành công! Có lỗi xảy ra!");
         res.redirect("/admin/dashboard/users-manager");
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-// Trang thông tin tài khoản
-getAccountPage(req, res, next) {
-  if (req.isAuthenticated()) {
-    admin.findOne({ "loginInformation.userName": req.session.passport.user.username })
-      .then(customerResult => {
+  async getUpdateAllStatusOrder(req, res, next) {
+    try {
+      const data = { status: 'Chuẩn bị hàng' };
+      // Lấy tất cả bill có status 'Chờ xác nhận' và cập nhật
+      const pendingBills = await bill.find({ status: 'Chờ xác nhận' });
+      for (const billItem of pendingBills) {
+        await bill.findByIdAndUpdate(billItem._id, data);
+      }
+      req.flash("success", "Đã xác nhận tất cả đơn hàng!");
+      res.redirect('/admin/dashboard/pending-orders-manager');
+    } catch (err) {
+      console.log(err);
+      req.flash("error", "Lỗi xác nhận đơn hàng!");
+      res.redirect('/admin/dashboard/pending-orders-manager');
+    }
+  }
+
+  // Trang thông tin tài khoản
+  async getAccountPage(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const customerResult = await admin.findOne({ "loginInformation.userName": req.session.passport.user.username });
         if (!customerResult) {
           req.flash("error", "Không tìm thấy thông tin tài khoản!");
           return res.redirect("/admin/dashboard");
@@ -945,31 +1049,30 @@ getAccountPage(req, res, next) {
           customer: customerResult,
           message: req.flash("success") || req.flash("error") || ''
         });
-      })
-      .catch(err => {
+      } catch (err) {
         console.error(err);
         req.flash("error", "Có lỗi xảy ra khi tải trang thông tin tài khoản!");
         res.redirect("/admin/dashboard");
-      });
-  } else {
-    res.redirect("/admin/login");
-  }
-}
-
-// Cập nhật thông tin tài khoản
-postUpdateAccount(req, res, next) {
-  if (req.isAuthenticated()) {
-    const username = req.session.passport.user.username;
-    
-    // Validation cơ bản
-    const { firstname, lastname, email, phoneNumber } = req.body;
-    if (!firstname || !lastname || !email || !phoneNumber) {
-      req.flash("error", "Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return res.redirect("/admin/dashboard/account");
+      }
+    } else {
+      res.redirect("/admin/login");
     }
+  }
 
-    admin.findOne({ "loginInformation.userName": username })
-      .then(adminResult => {
+  // Cập nhật thông tin tài khoản
+  async postUpdateAccount(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const username = req.session.passport.user.username;
+        
+        // Validation cơ bản
+        const { firstname, lastname, email, phoneNumber } = req.body;
+        if (!firstname || !lastname || !email || !phoneNumber) {
+          req.flash("error", "Vui lòng điền đầy đủ thông tin bắt buộc!");
+          return res.redirect("/admin/dashboard/account");
+        }
+
+        const adminResult = await admin.findOne({ "loginInformation.userName": username });
         if (!adminResult) {
           req.flash("error", "Không tìm thấy tài khoản!");
           return res.redirect("/admin/dashboard/account");
@@ -977,8 +1080,8 @@ postUpdateAccount(req, res, next) {
 
         // Tạo object update data
         const updateData = {
-          'fullNameCustomer.firstName': firstname,
-          'fullNameCustomer.lastName': lastname,
+          firstName: firstname,
+          lastName: lastname,
           dateOfBirth: req.body.dateOfBirth,
           sex: req.body.sex,
           identityCardNumber: req.body.identityCardNumber,
@@ -991,92 +1094,76 @@ postUpdateAccount(req, res, next) {
         // Xử lý avatar nếu có file upload
         if (req.file) {
           updateData.avatar = `/uploads/${req.file.filename}`;
-          console.log('Avatar updated:', updateData.avatar);
         }
 
-        return admin.findOneAndUpdate(
-          { "loginInformation.userName": username }, 
-          { $set: updateData }, 
-          { new: true, runValidators: true }
-        );
-      })
-      .then((updatedAdmin) => {
-        console.log('Admin updated successfully:', updatedAdmin);
+        await admin.findOneAndUpdate({ "loginInformation.userName": username }, updateData);
         req.flash("success", "Cập nhật thông tin tài khoản thành công!");
         res.redirect("/admin/dashboard/account");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Lỗi khi cập nhật:", err);
         req.flash("error", "Cập nhật thông tin tài khoản không thành công: " + err.message);
         res.redirect("/admin/dashboard/account");
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
-}
 
-// Đổi mật khẩu
-postChangePassword(req, res, next) {
-  if (req.isAuthenticated()) {
-    const username = req.session.passport.user.username;
-    const { currentPassword, newPassword, confirmPassword } = req.body;
+  // Đổi mật khẩu
+  async postChangePassword(req, res, next) {
+    if (req.isAuthenticated()) {
+      try {
+        const username = req.session.passport.user.username;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    // Kiểm tra mật khẩu mới
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      req.flash("error", "Vui lòng điền đầy đủ thông tin mật khẩu!");
-      return res.redirect("/admin/dashboard/account");
-    }
+        // Kiểm tra mật khẩu mới
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          req.flash("error", "Vui lòng điền đầy đủ thông tin mật khẩu!");
+          return res.redirect("/admin/dashboard/account");
+        }
 
-    if (newPassword !== confirmPassword) {
-      req.flash("error", "Mật khẩu mới không khớp!");
-      return res.redirect("/admin/dashboard/account");
-    }
+        if (newPassword !== confirmPassword) {
+          req.flash("error", "Mật khẩu mới không khớp!");
+          return res.redirect("/admin/dashboard/account");
+        }
 
-    if (newPassword.length < 6) {
-      req.flash("error", "Mật khẩu phải có ít nhất 6 ký tự!");
-      return res.redirect("/admin/dashboard/account");
-    }
+        if (newPassword.length < 6) {
+          req.flash("error", "Mật khẩu phải có ít nhất 6 ký tự!");
+          return res.redirect("/admin/dashboard/account");
+        }
 
-    admin.findOne({ "loginInformation.userName": username })
-      .then(adminResult => {
+        const adminResult = await admin.findOne({ "loginInformation.userName": username });
         if (!adminResult) {
           req.flash("error", "Không tìm thấy tài khoản!");
           return res.redirect("/admin/dashboard/account");
         }
 
         // Kiểm tra mật khẩu hiện tại
-        // LƯU Ý: Trong thực tế, bạn nên sử dụng bcrypt để so sánh mật khẩu
         if (adminResult.loginInformation.password !== currentPassword) {
           req.flash("error", "Mật khẩu hiện tại không đúng!");
           return res.redirect("/admin/dashboard/account");
         }
 
         // Cập nhật mật khẩu mới
-        return admin.findOneAndUpdate(
+        await admin.findOneAndUpdate(
           { "loginInformation.userName": username }, 
           { 
-            $set: { 
-              "loginInformation.password": newPassword,
-              updatedAt: new Date()
-            } 
-          }, 
-          { new: true }
+            password: newPassword,
+            updatedAt: new Date()
+          }
         );
-      })
-      .then(() => {
+
         req.flash("success", "Đổi mật khẩu thành công!");
         res.redirect("/admin/dashboard/account");
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Lỗi khi đổi mật khẩu:", err);
         req.flash("error", "Đổi mật khẩu không thành công!");
         res.redirect("/admin/dashboard/account");
-      });
-  } else {
-    res.redirect("/admin/login");
+      }
+    } else {
+      res.redirect("/admin/login");
+    }
   }
 }
-}
-
 
 module.exports = new AdminController();

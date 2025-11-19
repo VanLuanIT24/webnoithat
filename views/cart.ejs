@@ -1009,111 +1009,84 @@
         <div class="container">
             <h1 class="cart-title">Giỏ Hàng Của Bạn</h1>
             
-            <% if (customer && customer.listProduct && customer.listProduct.length > 0) { %>
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="cart-table">
-                            <div class="cart-table-header">
-                                <div class="cart-header-product">Sản phẩm</div>
-                                <div class="cart-header-price">Đơn giá</div>
-                                <div class="cart-header-quantity">Số lượng</div>
-                                <div class="cart-header-total">Thành tiền</div>
-                                <div class="cart-header-remove"></div>
+<!-- Trong file cart.ejs - SỬA PHẦN HIỂN THỊ GIỎ HÀNG -->
+<% if (customer && customer.listProduct && customer.listProduct.length > 0) { %>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="cart-table">
+                <div class="cart-table-header">
+                    <div class="cart-header-product">Sản phẩm</div>
+                    <div class="cart-header-price">Đơn giá</div>
+                    <div class="cart-header-quantity">Số lượng</div>
+                    <div class="cart-header-total">Thành tiền</div>
+                    <div class="cart-header-remove"></div>
+                </div>
+                
+                <% 
+                let totalCart = 0;
+                // ĐẢM BẢO customer.listProduct là mảng
+                const cartItems = Array.isArray(customer.listProduct) ? customer.listProduct : [];
+                
+                cartItems.forEach((product, index) => { 
+                    // Đảm bảo product có đầy đủ thuộc tính
+                    const productPrice = product.productPrice || 0;
+                    const productAmount = product.amount || 1;
+                    const productTotal = productPrice * productAmount;
+                    totalCart += productTotal;
+                %>
+                    <div class="cart-item" id="cart-item-<%= product.productID %>">
+                        <div class="cart-product">
+                            <img src="<%= product.productImage || '/images/default-product.jpg' %>" 
+                                 alt="<%= product.productName || 'Sản phẩm' %>" 
+                                 class="cart-product-image"
+                                 onerror="this.src='/images/default-product.jpg'">
+                            <div class="cart-product-info">
+                                <h3 class="cart-product-name">
+                                    <%= product.productName || 'Sản phẩm không có tên' %>
+                                </h3>
+                                <p class="cart-product-category">Mã: <%= product.productID || 'N/A' %></p>
                             </div>
-                            
-                            <% 
-                            let totalCart = 0;
-                            customer.listProduct.forEach((product, index) => { 
-                                const productTotal = product.productPrice * product.amount;
-                                totalCart += productTotal;
-                            %>
-                                <div class="cart-item" id="cart-item-<%= product.productID %>">
-                                    <div class="cart-product">
-                                        <img src="<%= product.productImage %>" alt="<%= product.productName %>" class="cart-product-image">
-                                        <div class="cart-product-info">
-                                            <h3 class="cart-product-name"><%= product.productName %></h3>
-                                            <p class="cart-product-category">Mã sản phẩm: <%= product.productID %></p>
-                                        </div>
-                                    </div>
-                                    <div class="cart-price">
-                                        <%= new Intl.NumberFormat('vi-VN').format(product.productPrice) %>₫
-                                    </div>
-                                    <div class="cart-quantity">
-                                        <form action="/cart/update/<%= product.productID %>" method="POST" class="d-flex align-items-center">
-                                            <button type="button" class="quantity-btn minus-btn" data-product-id="<%= product.productID %>">-</button>
-                                            <input type="number" name="amount" class="quantity-input" value="<%= product.amount %>" min="1" max="99" data-product-id="<%= product.productID %>">
-                                            <button type="button" class="quantity-btn plus-btn" data-product-id="<%= product.productID %>">+</button>
-                                        </form>
-                                    </div>
-                                    <div class="cart-total">
-                                        <%= new Intl.NumberFormat('vi-VN').format(productTotal) %>₫
-                                    </div>
-                                    <div class="cart-remove">
-                                        <a href="/cart/delete/<%= product.productID %>" class="remove-btn" data-product-id="<%= product.productID %>">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            <% }); %>
                         </div>
-                    </div>
-                    
-                    <div class="col-lg-4">
-                        <div class="cart-summary">
-                            <h3 class="summary-title">Tổng Thanh Toán</h3>
-                            
-                            <div class="summary-item">
-                                <span class="summary-label">Tạm tính</span>
-                                <span class="summary-value"><%= new Intl.NumberFormat('vi-VN').format(totalCart) %>₫</span>
-                            </div>
-                            
-                            <div class="summary-item">
-                                <span class="summary-label">Phí vận chuyển</span>
-                                <span class="summary-value">Miễn phí</span>
-                            </div>
-                            
-                            <div class="summary-item">
-                                <span class="summary-label">Giảm giá</span>
-                                <span class="summary-value">0₫</span>
-                            </div>
-                            
-                            <div class="summary-total">
-                                <span class="total-label">Tổng cộng</span>
-                                <span class="total-value"><%= new Intl.NumberFormat('vi-VN').format(totalCart) %>₫</span>
-                            </div>
-                            
-                            <a href="/checkout" class="btn checkout-btn">
-                                <i class="fas fa-credit-card me-2"></i>Tiến Hành Thanh Toán
+                        <div class="cart-price">
+                            <%= new Intl.NumberFormat('vi-VN').format(productPrice) %>₫
+                        </div>
+                        <div class="cart-quantity">
+                            <form action="/cart/update/<%= product.productID %>" method="POST" class="d-flex align-items-center">
+                                <button type="button" class="quantity-btn minus-btn" data-product-id="<%= product.productID %>">-</button>
+                                <input type="number" name="amount" class="quantity-input" 
+                                       value="<%= productAmount %>" min="1" max="99" 
+                                       data-product-id="<%= product.productID %>">
+                                <button type="button" class="quantity-btn plus-btn" data-product-id="<%= product.productID %>">+</button>
+                            </form>
+                        </div>
+                        <div class="cart-total">
+                            <%= new Intl.NumberFormat('vi-VN').format(productTotal) %>₫
+                        </div>
+                        <div class="cart-remove">
+                            <a href="/cart/delete/<%= product.productID %>" class="remove-btn" data-product-id="<%= product.productID %>">
+                                <i class="fas fa-trash"></i>
                             </a>
-                            
-                            <div class="continue-shopping">
-                                <a href="/product">
-                                    <i class="fas fa-arrow-left me-2"></i>Tiếp tục mua sắm
-                                </a>
-                            </div>
-                            
-                            <div class="promo-code">
-                                <h4 class="promo-title">Mã Giảm Giá</h4>
-                                <form class="promo-form">
-                                    <input type="text" class="form-control promo-input" placeholder="Nhập mã giảm giá">
-                                    <button type="submit" class="btn promo-btn">Áp dụng</button>
-                                </form>
-                            </div>
                         </div>
                     </div>
-                </div>
-            <% } else { %>
-                <div class="cart-empty">
-                    <div class="cart-empty-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <h2 class="cart-empty-title">Giỏ hàng của bạn đang trống</h2>
-                    <p class="cart-empty-text">Hãy khám phá các sản phẩm của chúng tôi và thêm vào giỏ hàng những sản phẩm bạn yêu thích.</p>
-                    <a href="/product" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%); border: none; border-radius: 50px; padding: 16px 36px; font-weight: 700;">
-                        <i class="fas fa-shopping-bag me-2"></i>Mua Sắm Ngay
-                    </a>
-                </div>
-            <% } %>
+                <% }); %>
+            </div>
+        </div>
+        
+        <!-- Phần còn lại giữ nguyên -->
+    </div>
+<% } else { %>
+    <!-- Hiển thị khi giỏ hàng trống -->
+    <div class="cart-empty">
+        <div class="cart-empty-icon">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <h2 class="cart-empty-title">Giỏ hàng của bạn đang trống</h2>
+        <p class="cart-empty-text">Hãy khám phá các sản phẩm của chúng tôi và thêm vào giỏ hàng những sản phẩm bạn yêu thích.</p>
+        <a href="/product" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag me-2"></i>Mua Sắm Ngay
+        </a>
+    </div>
+<% } %>
         </div>
     </section>
 
