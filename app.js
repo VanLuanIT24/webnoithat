@@ -28,12 +28,38 @@ app.set("trust proxy", 1);
 
 const flash = require('connect-flash');
 const session = require("express-session");
+const MySQLStore = require('express-mysql-session')(session);
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
 
 const adminModel = require('./models-mysql/admins');
 const customerModel = require('./models-mysql/customers');
+
+// ======================================================
+// MYSQL SESSION STORE CONFIG
+// ======================================================
+const sessionStoreOptions = {
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  clearExpired: true,
+  checkExpirationInterval: 900000, // 15 phút
+  expiration: 86400000, // 24 giờ
+  createDatabaseTable: true,
+  schema: {
+    tableName: 'sessions',
+    columnNames: {
+      session_id: 'session_id',
+      expires: 'expires',
+      data: 'data'
+    }
+  }
+};
+
+const sessionStore = new MySQLStore(sessionStoreOptions);
 
 // ======================================================
 // PASSPORT – USER STRATEGY
@@ -115,10 +141,16 @@ passport.deserializeUser(async (sessionUser, done) => {
 // ======================================================
 app.use(
   session({
-    secret: "thesecret",
-    saveUninitialized: true,
+    key: 'session_cookie_name',
+    secret: process.env.SESSION_SECRET || 'railway-secret-key-change-this-to-random-string',
+    store: sessionStore,
     resave: false,
-    cookie: { secure: false, maxAge: 86400000 }
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' ? false : false, // Set to true if using HTTPS
+      httpOnly: true,
+      maxAge: 86400000 // 24 giờ
+    }
   })
 );
 
