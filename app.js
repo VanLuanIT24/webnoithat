@@ -1,7 +1,10 @@
+require('dotenv').config(); // Load environment variables đầu tiên
+
 const express = require("express");
 const app = express();
 const path = require("path");
-// Ensure MySQL host/port default to IPv4 to avoid ::1 (IPv6) connection attempts
+
+// Đặt DB_HOST và DB_PORT từ .env (nếu chưa có)
 process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
 process.env.DB_PORT = process.env.DB_PORT || '3306';
 
@@ -85,6 +88,12 @@ passport.use('admin-local', new LocalStrategy({
       return done(null, false, { message: 'Tài khoản admin không tồn tại!' });
     }
     
+    console.log('DEBUG Admin found:', {
+      username: admin.loginInformation?.userName,
+      password: admin.loginInformation?.password,
+      inputPassword: password
+    });
+    
     if (admin.loginInformation.password !== password) {
       console.log('Admin password incorrect');
       return done(null, false, { message: 'Mật khẩu không đúng!' });
@@ -154,6 +163,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ extended: true, limit: "30mb" }));
 app.set("view engine", "ejs");
+app.set('view cache', false); // Disable view cache in development
 app.use(express.static(path.join(__dirname, "/")));
 
 // Router
@@ -165,6 +175,19 @@ app.use('/shipping', shipping);
 app.use('/support', support);
 app.use('/about', about);
 
-app.listen(PORT, () => {
-  console.log(`Server is started at: 0.0.0.0:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`Server is started at: http://localhost:${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} đã được sử dụng!`);
+    console.log('💡 Giải pháp:');
+    console.log('   1. Đổi PORT trong file .env');
+    console.log('   2. Hoặc kill process đang dùng port này:');
+    console.log(`      Windows: netstat -ano | findstr :${PORT}`);
+    console.log('      Sau đó: taskkill /PID <PID> /F');
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', err);
+    process.exit(1);
+  }
 });

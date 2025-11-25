@@ -1299,17 +1299,11 @@
                         <div class="nav-icons d-none d-lg-flex">
                             <a href="/favorite" class="nav-icon">
                                 <i class="fas fa-heart"></i>
-                                <% if (customer && customer.listFavorite && customer.listFavorite.length > 0) { %>
-                                    <span class="nav-badge"><%= customer.listFavorite.length %></span>
-                                <% } %>
+                                <span class="nav-badge"><%= typeof favoriteCount !== 'undefined' ? favoriteCount : 0 %></span>
                             </a>
                             <a href="/cart" class="nav-icon">
                                 <i class="fas fa-shopping-cart"></i>
-                                <% if (customer && customer.listProduct && customer.listProduct.length > 0) { %>
-                                    <span class="nav-badge"><%= customer.listProduct.length %></span>
-                                <% } else { %>
-                                    <span class="nav-badge">0</span>
-                                <% } %>
+                                <span class="nav-badge"><%= typeof cartCount !== 'undefined' ? cartCount : 0 %></span>
                             </a>
                         </div>
                         
@@ -1321,11 +1315,19 @@
                                         <img src="<%= customer.avatar %>" alt="Avatar" class="user-avatar">
                                     <% } else { %>
                                         <div class="user-avatar bg-primary d-flex align-items-center justify-content-center text-white fw-bold">
-                                            <%= customer.fullNameCustomer.firstName.charAt(0) %><%= customer.fullNameCustomer.lastName.charAt(0) %>
+                                            <% 
+                                            const firstName = customer.fullNameCustomer?.firstName || customer.firstName || 'U';
+                                            const lastName = customer.fullNameCustomer?.lastName || customer.lastName || 'N';
+                                            %>
+                                            <%= firstName.charAt(0).toUpperCase() %><%= lastName.charAt(0).toUpperCase() %>
                                         </div>
                                     <% } %>
                                     <span class="user-name d-none d-md-inline">
-                                        <%= customer.fullNameCustomer.firstName %> <%= customer.fullNameCustomer.lastName %>
+                                        <% 
+                                        const displayFirstName = customer.fullNameCustomer?.firstName || customer.firstName || 'User';
+                                        const displayLastName = customer.fullNameCustomer?.lastName || customer.lastName || '';
+                                        %>
+                                        <%= displayFirstName %> <%= displayLastName %>
                                     </span>
                                     <i class="fas fa-chevron-down ms-1 text-muted"></i>
                                 </div>
@@ -1545,7 +1547,87 @@
                         stockIcon = 'check-circle';
                     }
                 %>
-                <!-- Product card code giữ nguyên -->
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <% const imageUrl = product.description.imageList && product.description.imageList.length > 0 ? product.description.imageList[0] : '/public/img/product-img/default.jpg'; %>
+                            <img src="<%= imageUrl %>" alt="<%= product.productName %>" class="product-image">
+                            
+                            <div class="product-badges">
+                                <% if (product.discount && product.discount.value > 0) { %>
+                                    <% const discountPercent = product.discount.type === 'percent' ? product.discount.value : Math.round((product.discount.value / product.description.price) * 100); %>
+                                    <span class="badge badge-discount">-<%= discountPercent %>%</span>
+                                <% } %>
+                                <% if (product.description.featured) { %>
+                                    <span class="badge badge-new">Nổi bật</span>
+                                <% } %>
+                                <% if (stock === 0) { %>
+                                    <span class="badge badge-out-of-stock">Hết hàng</span>
+                                <% } %>
+                            </div>
+                            
+                            <div class="product-actions-overlay">
+                                <div class="quick-actions">
+                                    <a href="/product/detail/<%= product._id %>" class="quick-action-btn" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <% if (stock > 0) { %>
+                                    <a href="/cart/<%= product._id %>" class="quick-action-btn" title="Thêm vào giỏ">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </a>
+                                    <% } %>
+                                    <a href="/product/favorite/<%= product._id %>" class="quick-action-btn" title="Yêu thích">
+                                        <i class="fas fa-heart"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="product-info">
+                            <h3 class="product-name">
+                                <a href="/product/detail/<%= product._id %>"><%= product.productName %></a>
+                            </h3>
+                            
+                            <% if (product.rating && product.rating.count > 0) { %>
+                            <div class="product-rating">
+                                <div class="rating-stars">
+                                    <% for(let i = 1; i <= 5; i++) { %>
+                                        <i class="fas fa-star <%= i <= Math.round(product.rating.average) ? 'text-warning' : 'text-muted' %>"></i>
+                                    <% } %>
+                                </div>
+                                <span class="rating-count">(<%= product.rating.count %> đánh giá)</span>
+                            </div>
+                            <% } %>
+                            
+                            <div class="product-price">
+                                <span class="current-price"><%= finalPrice.toLocaleString('vi-VN') %>₫</span>
+                                <% if (product.discount && product.discount.value > 0) { %>
+                                    <span class="original-price"><%= product.description.price.toLocaleString('vi-VN') %>₫</span>
+                                <% } %>
+                            </div>
+                            
+                            <div class="product-stock <%= stockClass %>">
+                                <i class="fas fa-<%= stockIcon %>"></i>
+                                <span class="stock-text"><%= stockDisplay %></span>
+                            </div>
+                            
+                            <div class="product-actions mt-3">
+                                <% if (stock > 0) { %>
+                                    <a href="/cart/<%= product._id %>" class="btn btn-primary btn-sm btn-add-to-cart">
+                                        <i class="fas fa-shopping-cart me-1"></i> Thêm vào giỏ
+                                    </a>
+                                <% } else { %>
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-times me-1"></i> Hết hàng
+                                    </button>
+                                <% } %>
+                                <button class="btn btn-outline-danger btn-sm btn-favorite ms-2">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <% }); %>
             </div>
             

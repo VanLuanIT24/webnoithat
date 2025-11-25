@@ -4,8 +4,11 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "nodemon --inspect app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "setup": "node mysql-setup.js",
+    "import": "node import-from-json.js",
+    "test": "node test-railway-connection.js"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +17,7 @@
     "bcrypt": "^6.0.0",
     "connect-flash": "^0.1.1",
     "demon": "^0.0.1",
+    "dotenv": "^16.6.1",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
@@ -21,8 +25,7 @@
     "multer": "^1.4.2",
     "mysql2": "^3.15.3",
     "passport": "^0.4.1",
-    "passport-local": "^1.0.0",
-    "thuongmaidientu": "file:"
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

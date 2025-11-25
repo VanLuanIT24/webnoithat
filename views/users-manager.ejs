@@ -128,13 +128,22 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <% users.forEach((user, index) => { %>
+                                                <% 
+                                                    // Phân trang đúng
+                                                    const startIndex = (page - 1) * numberItemPerpage;
+                                                    const endIndex = Math.min(startIndex + numberItemPerpage, users.length);
+                                                    const paginatedUsers = users.slice(startIndex, endIndex);
+                                                %>
+                                                <% paginatedUsers.forEach((user, index) => { %>
                                                     <tr>
-                                                        <td><%= (page - 1) * numberItemPerpage + index + 1 %></td>
+                                                        <td><%= startIndex + index + 1 %></td>
                                                         <td>
                                                             <img src="<%= user.avatar || '/uploads/user-01.png' %>" alt="Avatar" class="rounded-circle" width="40" height="40">
                                                         </td>
-                                                        <td><%= user.fullNameCustomer.firstName %> <%= user.fullNameCustomer.lastName %></td>
+                                                        <td>
+                                                            <strong><%= user.fullNameCustomer.firstName %> <%= user.fullNameCustomer.lastName %></strong><br>
+                                                            <small class="text-muted">@<%= user.loginInformation.userName %></small>
+                                                        </td>
                                                         <td><%= user.email %></td>
                                                         <td><%= user.phoneNumber %></td>
                                                         <td><%= user.identityCardNumber %></td>
@@ -148,28 +157,36 @@
                                                         </td>
                                                         <td>
                                                             <div class="btn-group" role="group">
-                                                                <a href="/admin/dashboard/users-manager/update/<%= user._id %>" class="btn btn-primary btn-sm">
+                                                                <a href="/admin/dashboard/users-manager/update/<%= user._id %>" class="btn btn-primary btn-sm" title="Chỉnh sửa">
                                                                     <i class="fas fa-edit"></i>
                                                                 </a>
                                                                 <% if(user.loginInformation.status !== false) { %>
                                                                     <a href="/admin/dashboard/users-manager/block/<%= user._id %>" class="btn btn-warning btn-sm" 
-                                                                       onclick="return confirm('Bạn có chắc muốn khóa người dùng này?')">
+                                                                       onclick="return confirm('Bạn có chắc muốn khóa người dùng này?')" title="Khóa tài khoản">
                                                                         <i class="fas fa-lock"></i>
                                                                     </a>
                                                                 <% } else { %>
                                                                     <a href="/admin/dashboard/users-manager/block/<%= user._id %>" class="btn btn-success btn-sm" 
-                                                                       onclick="return confirm('Bạn có chắc muốn mở khóa người dùng này?')">
+                                                                       onclick="return confirm('Bạn có chắc muốn mở khóa người dùng này?')" title="Mở khóa tài khoản">
                                                                         <i class="fas fa-unlock"></i>
                                                                     </a>
                                                                 <% } %>
                                                                 <a href="/admin/dashboard/users-manager/delete/<%= user._id %>" class="btn btn-danger btn-sm" 
-                                                                   onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')">
+                                                                   onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')" title="Xóa người dùng">
                                                                     <i class="fas fa-trash"></i>
                                                                 </a>
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 <% }) %>
+                                                <% if(paginatedUsers.length === 0) { %>
+                                                    <tr>
+                                                        <td colspan="9" class="text-center py-4">
+                                                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                                            <p>Không có người dùng nào</p>
+                                                        </td>
+                                                    </tr>
+                                                <% } %>
                                             </tbody>
                                         </table>
                                     </div>

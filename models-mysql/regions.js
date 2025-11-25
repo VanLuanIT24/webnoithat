@@ -8,9 +8,8 @@ class Region extends BaseModel {
 
   transformToMySQL(mongoData) {
     return {
-      Id: mongoData.Id,
-      Name: mongoData.Name,
-      Districts: JSON.stringify(mongoData.Districts || [])
+      region: mongoData.Name || mongoData.region,
+      details: JSON.stringify(mongoData.Districts || mongoData.details || [])
     };
   }
 
@@ -19,30 +18,30 @@ class Region extends BaseModel {
     
     let Districts = [];
     try {
-      if (mysqlData.Districts) {
-        if (typeof mysqlData.Districts === 'string') {
+      if (mysqlData.details) {
+        if (typeof mysqlData.details === 'string') {
           // Kiểm tra xem có phải là JSON string hợp lệ không
-          const trimmed = mysqlData.Districts.trim();
+          const trimmed = mysqlData.details.trim();
           if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-            Districts = JSON.parse(mysqlData.Districts);
+            Districts = JSON.parse(mysqlData.details);
           } else {
-            console.warn('⚠️ Districts data is not valid JSON:', mysqlData.Districts);
+            console.warn('⚠️ Districts data is not valid JSON:', mysqlData.details);
             Districts = [];
           }
-        } else if (Array.isArray(mysqlData.Districts)) {
-          Districts = mysqlData.Districts;
+        } else if (Array.isArray(mysqlData.details)) {
+          Districts = mysqlData.details;
         }
       }
     } catch (error) {
       console.error('❌ Lỗi parse Districts:', error.message);
-      console.log('Raw Districts data:', mysqlData.Districts);
+      console.log('Raw Districts data:', mysqlData.details);
       Districts = [];
     }
     
     return {
       _id: mysqlData._id,
-      Id: mysqlData.Id,
-      Name: mysqlData.Name,
+      Id: mysqlData.region,
+      Name: mysqlData.region,
       Districts: Districts,
       createdAt: mysqlData.createdAt
     };
@@ -68,7 +67,7 @@ class Region extends BaseModel {
 
   // Special methods for regions
   async findByIdRegion(regionId) {
-    return await this.findOne({ Id: regionId });
+    return await this.findOne({ region: regionId });
   }
 }
 

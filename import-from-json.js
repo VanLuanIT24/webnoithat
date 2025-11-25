@@ -1,4 +1,6 @@
-// Ensure MySQL host/port default to IPv4 to avoid ::1 (IPv6) connection attempts
+require('dotenv').config(); // Load env đầu tiên
+
+// Đọc DB config từ env
 process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
 process.env.DB_PORT = process.env.DB_PORT || '3306';
 
@@ -52,6 +54,10 @@ async function importData() {
     // Xóa dữ liệu cũ
     console.log('🗑️ Đang xóa dữ liệu cũ...');
     const db = require('./config/database');
+    
+    // Tắt foreign key checks tạm thời
+    await db.query('SET FOREIGN_KEY_CHECKS = 0');
+    
     await db.query('DELETE FROM bills');
     await db.query('DELETE FROM products');
     await db.query('DELETE FROM customers');
@@ -59,6 +65,9 @@ async function importData() {
     await db.query('DELETE FROM types');
     await db.query('DELETE FROM admins');
     await db.query('DELETE FROM regions');
+    
+    // Bật lại foreign key checks
+    await db.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Đã xóa dữ liệu cũ');
 
     // Import types - SỬA LỖI: Dùng Type.create() thay vì Supplier.create()
@@ -67,8 +76,14 @@ async function importData() {
     let typeCount = 0;
     for (const typeData of typesData) {
       try {
+        // Xử lý mongoId
+        let mongoId = typeData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: typeData._id,
+          mongoId: mongoId,
           typeName: sanitizeValue(typeData.typeName),
           thumbnail: sanitizeValue(typeData.thumbnail),
           status: typeData.status !== false
@@ -87,8 +102,14 @@ async function importData() {
     let supplierCount = 0;
     for (const supplierData of suppliersData) {
       try {
+        // Xử lý mongoId
+        let mongoId = supplierData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: supplierData._id,
+          mongoId: mongoId,
           supplierName: sanitizeValue(supplierData.supplierName),
           status: supplierData.status !== false
         };
@@ -106,8 +127,14 @@ async function importData() {
     let adminCount = 0;
     for (const adminData of adminsData) {
       try {
+        // Xử lý mongoId
+        let mongoId = adminData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: adminData._id,
+          mongoId: mongoId,
           firstName: sanitizeValue(adminData.fullNameCustomer?.firstName),
           lastName: sanitizeValue(adminData.fullNameCustomer?.lastName),
           dateOfBirth: sanitizeValue(adminData.dateOfBirth),
@@ -140,8 +167,14 @@ async function importData() {
 
     for (const customerData of customersData) {
       try {
+        // Xử lý mongoId
+        let mongoId = customerData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: customerData._id,
+          mongoId: mongoId,
           firstName: sanitizeValue(customerData.fullNameCustomer?.firstName),
           lastName: sanitizeValue(customerData.fullNameCustomer?.lastName),
           dateOfBirth: sanitizeValue(customerData.dateOfBirth),
@@ -160,11 +193,16 @@ async function importData() {
           listFavorite: JSON.stringify(customerData.listFavorite || [])
         };
 
-        // Sử dụng direct insert để tránh lỗi transform
-        const result = await db.insert('customers', mysqlData);
-        customerIdMap.set(customerData._id, result.insertedId);
+        // Sử dụng Customer.create để insert
+        const result = await Customer.create(mysqlData);
+        // Lưu mapping mongoId -> mysqlId
+        if (result && result._id) {
+          customerIdMap.set(customerData._id, result._id);
+        }
         customerCount++;
-        console.log(`✅ Customer ${customerCount}: ${mysqlData.userName}`);
+        if (customerCount % 5 === 0) {
+          console.log(`   ✅ Đã import ${customerCount} customers...`);
+        }
       } catch (error) {
         console.error(`❌ Lỗi import customer ${customerCount + 1}:`, error.message);
       }
@@ -177,8 +215,14 @@ async function importData() {
     let productCount = 0;
     for (const productData of productsData) {
       try {
+        // Xử lý mongoId
+        let mongoId = productData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: productData._id,
+          mongoId: mongoId,
           productName: sanitizeValue(productData.productName),
           description: JSON.stringify(productData.description || {}),
           discount: JSON.stringify(productData.discount || {}),
@@ -198,11 +242,16 @@ async function importData() {
     let regionCount = 0;
     for (const regionData of regionsData) {
       try {
+        // Xử lý mongoId
+        let mongoId = regionData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         const mysqlData = {
-          mongoId: regionData._id,
-          Id: sanitizeValue(regionData.Id),
-          Name: sanitizeValue(regionData.Name),
-          Districts: JSON.stringify(regionData.Districts || [])
+          mongoId: mongoId,
+          region: sanitizeValue(regionData.Name),
+          details: JSON.stringify(regionData.Districts || [])
         };
         await Region.create(mysqlData);
         regionCount++;
@@ -219,6 +268,12 @@ async function importData() {
     
     for (const billData of billsData) {
       try {
+        // Xử lý mongoId
+        let mongoId = billData._id;
+        if (typeof mongoId === 'object' && mongoId.$oid) {
+          mongoId = mongoId.$oid;
+        }
+        
         // Tìm userID tương ứng trong MySQL từ map
         let userID = null;
         if (billData.userID && customerIdMap.has(billData.userID)) {
@@ -226,20 +281,23 @@ async function importData() {
         }
 
         const mysqlData = {
-          mongoId: billData._id,
+          mongoId: mongoId,
           userID: userID,
-          userMongoId: billData.userID, // Lưu cả mongoId gốc
+          userMongoId: sanitizeValue(billData.userId?.$oid || billData.userId),
           firstName: sanitizeValue(billData.displayName?.firstName),
           lastName: sanitizeValue(billData.displayName?.lastName),
           listProduct: JSON.stringify(billData.listProduct || []),
           address: sanitizeValue(billData.address),
           paymentMethod: sanitizeValue(billData.paymentMethod),
           resquest: sanitizeValue(billData.resquest),
-          status: sanitizeValue(billData.status, 'pending')
+          status: sanitizeValue(billData.status, 'Chờ xác nhận')
         };
 
-        await db.insert('bills', mysqlData);
+        await Bill.create(mysqlData);
         billCount++;
+        if (billCount % 5 === 0) {
+          console.log(`   ✅ Đã import ${billCount} bills...`);
+        }
       } catch (error) {
         console.error(`❌ Lỗi import bill ${billCount + 1}:`, error.message);
       }
@@ -262,10 +320,16 @@ async function importData() {
 
     // Hiển thị thông tin đăng nhập chi tiết
     console.log('\n🔍 Chi tiết đăng nhập:');
-    const customers = await db.query('SELECT userName, password FROM customers LIMIT 5');
-    customers.forEach(customer => {
-      console.log(`   User: username="${customer.userName}", password="${customer.password}"`);
-    });
+    try {
+      const [customers] = await db.query('SELECT userName, password FROM customers LIMIT 5');
+      if (customers && customers.length > 0) {
+        customers.forEach(customer => {
+          console.log(`   User: username="${customer.userName}", password="${customer.password}"`);
+        });
+      }
+    } catch (err) {
+      console.log('   (Không thể lấy thông tin đăng nhập)');
+    }
 
     process.exit(0);
 

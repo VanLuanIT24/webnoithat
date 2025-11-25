@@ -14,13 +14,12 @@ class AdminController {
     res.render("login", { message: req.flash("error") });
   }
 
-  // controllers/AdminController.js - Sửa hàm getDashboardPage
-async getDashboardPage(req, res, next) {
-  try {
-    if (req.isAuthenticated() && req.user) {
-      const username = req.user.loginInformation?.userName;
+  // controllers/AdminController.js - CẢI TIẾN DASHBOARD
+  async getDashboardPage(req, res, next) {
+    try {
+      if (req.isAuthenticated() && req.user) {
+        const username = req.user.loginInformation?.userName;
       
-      // SỬA: Dùng biến 'admin' đã import thay vì 'admins'
       const adminResult = await admin.findOne({ 
         userName: username 
       });
@@ -30,7 +29,7 @@ async getDashboardPage(req, res, next) {
         return res.redirect('/admin/login');
       }
 
-      // Lấy dữ liệu thống kê - SỬA: dùng đúng tên biến đã import
+      // 1. Thống kê tổng quan
       const [customerCount, productCount, billCount, typeCount] = await Promise.all([
         customers.countDocuments(),
         product.countDocuments(),
@@ -38,28 +37,123 @@ async getDashboardPage(req, res, next) {
         type.countDocuments()
       ]);
 
-      // SỬA: Dùng findWithLimit thay vì find().limit()
-      const recentOrders = await bill.findWithLimit({}, 5);
+      // 2. Đơn hàng gần đây
+      const recentOrders = await bill.findWithLimit({}, 10);
+      
+      // 3. Sản phẩm bán chạy (top 10 rating cao nhất)
+      const allProducts = await product.find({}, 100);
+      const topProducts = allProducts
+        .filter(p => p.rating && p.rating.count > 0)
+        .sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0))
+        .slice(0, 10);
+
+      // 4. Thống kê đơn hàng theo trạng thái
+      const allBills = await bill.find({});
+      const orderStats = {
+        pending: allBills.filter(b => b.status === 'Chờ xác nhận').length,
+        preparing: allBills.filter(b => b.status === 'Chuẩn bị hàng').length,
+        shipping: allBills.filter(b => b.status === 'Đang giao hàng').length,
+        delivered: allBills.filter(b => b.status === 'Đã giao hàng').length,
+        cancelled: allBills.filter(b => b.status === 'Đã hủy').length
+      };
+
+      // 5. Tính tổng doanh thu
+      let totalRevenue = 0;
+      let revenueThisMonth = 0;
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      allBills.forEach(billItem => {
+        if (billItem.status !== 'Đã hủy' && billItem.listProduct) {
+          const billTotal = billItem.listProduct.reduce((sum, item) => {
+            return sum + (parseInt(item.productPrice || 0) * (item.amount || 1));
+          }, 0);
+          totalRevenue += billTotal;
+          
+          // Doanh thu tháng này
+          if (billItem.createdAt && new Date(billItem.createdAt) >= firstDayOfMonth) {
+            revenueThisMonth += billTotal;
+          }
+        }
+      });
+
+      // 6. Doanh thu 7 ngày gần đây (cho biểu đồ)
+      const last7Days = [];
+      const revenueByDay = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        
+        const dayRevenue = allBills
+          .filter(b => {
+            const billDate = new Date(b.createdAt);
+            return billDate >= date && billDate < nextDate && b.status !== 'Đã hủy';
+          })
+          .reduce((sum, b) => {
+            return sum + b.listProduct.reduce((s, item) => {
+              return s + (parseInt(item.productPrice || 0) * (item.amount || 1));
+            }, 0);
+          }, 0);
+        
+        last7Days.push(date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }));
+        revenueByDay.push(dayRevenue);
+      }
+
+      // 7. Sản phẩm sắp hết hàng (stock < 10)
+      const lowStockProducts = allProducts
+        .filter(p => p.description && p.description.stock < 10 && p.description.stock > 0)
+        .sort((a, b) => a.description.stock - b.description.stock)
+        .slice(0, 5);
+
+      // 8. Khách hàng mới trong tháng
+      const newCustomers = await customers.find({});
+      const newCustomersThisMonth = newCustomers.filter(c => {
+        return c.createdAt && new Date(c.createdAt) >= firstDayOfMonth;
+      }).length;
+
+      console.log("📊 Dashboard Stats:");
+      console.log("- Total Revenue:", totalRevenue);
+      console.log("- Revenue This Month:", revenueThisMonth);
+      console.log("- Order Stats:", orderStats);
+      console.log("- Low Stock Products:", lowStockProducts.length);
       
       res.render("dashboard", {
         customer: adminResult,
+        // Thống kê cơ bản
         customerCount,
         productCount, 
         billCount,
         typeCount,
-        abc: recentOrders, // Thêm dữ liệu đơn hàng
-        products: await product.findWithLimit({}, 10), // Thêm dữ liệu sản phẩm
+        // Doanh thu
+        totalRevenue,
+        revenueThisMonth,
+        // Đơn hàng
+        recentOrders,
+        orderStats,
+        // Sản phẩm
+        topProducts,
+        lowStockProducts,
+        // Biểu đồ
+        last7Days,
+        revenueByDay,
+        // Khách hàng
+        newCustomersThisMonth,
+        // Message
         message: req.flash("success") || ''
-      });
-    } else {
+        });
+      } else {
+        res.redirect('/admin/login');
+      }
+    } catch (err) {
+      console.error("❌ Lỗi trang dashboard admin:", err);
+      req.flash("error", "Lỗi tải trang dashboard!");
       res.redirect('/admin/login');
     }
-  } catch (err) {
-    console.error("Lỗi trang dashboard admin:", err);
-    req.flash("error", "Lỗi tải trang dashboard!");
-    res.redirect('/admin/login');
   }
-}
 
   async getProductManagerAtPage(req, res, next) {
     if (req.isAuthenticated()) {

@@ -392,6 +392,8 @@
                                                     <th class="border-0">Danh mục</th>
                                                     <th class="border-0">Số lượng tồn</th>
                                                     <th class="border-0">Đơn giá</th>
+                                                    <th class="border-0">Giảm giá</th>
+                                                    <th class="border-0">Đánh giá</th>
                                                     <th class="border-0">ĐVT</th>
                                                     <th class="border-0">Trạng thái</th>
                                                     <th class="border-0 text-center">Thao tác</th>
@@ -454,7 +456,31 @@
                                                                 <%= stockText %>
                                                             </span>
                                                         </td>
-                                                        <td><%= element.description.price.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ</td>
+                                                        <td>
+                                                            <%= element.description.price.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ
+                                                            <% if(element.description.featured) { %>
+                                                                <br><small class="badge badge-warning">Nổi bật</small>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <% if(element.discount && element.discount.type !== 'none' && element.discount.value > 0) { %>
+                                                                <% if(element.discount.type === 'percent') { %>
+                                                                    <span class="badge badge-danger"><%= element.discount.value %>%</span>
+                                                                <% } else { %>
+                                                                    <span class="badge badge-danger">-<%= element.discount.value.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') %>đ</span>
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <span class="text-muted">-</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <% if(element.rating && element.rating.average > 0) { %>
+                                                                <i class="fas fa-star text-warning"></i> <%= element.rating.average.toFixed(1) %>
+                                                                <br><small class="text-muted">(<%= element.rating.count %> đánh giá)</small>
+                                                            <% } else { %>
+                                                                <span class="text-muted">Chưa có</span>
+                                                            <% } %>
+                                                        </td>
                                                         <td><%= element.description.unit %></td>
                                                         <td>
                                                             <% if(element.description.status == true) { %>

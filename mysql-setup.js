@@ -1,30 +1,37 @@
-// mysql-setup.js
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 async function setupDatabase() {
   let connection;
   try {
-    // Read connection params from env with safe defaults (force IPv4 default)
+    // Đọc từ environment variables
     const DB_HOST = process.env.DB_HOST || '127.0.0.1';
-    const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
+    const DB_PORT = parseInt(process.env.DB_PORT || '3306', 10);
     const DB_USER = process.env.DB_USER || 'root';
-    const DB_PASS = process.env.DB_PASS || '10042004';
-    const DB_NAME = process.env.DB_NAME || 'webnoithat';
+    const DB_PASS = process.env.DB_PASSWORD || ''; // Sửa từ DB_PASS
+    const DB_NAME = process.env.DB_NAME || 'railway';
+
+    console.log('🔄 Connecting to Railway MySQL...');
+    console.log('   Host:', DB_HOST);
+    console.log('   Port:', DB_PORT);
+    console.log('   Database:', DB_NAME);
 
     // Kết nối tới MySQL (chưa chọn database)
     connection = await mysql.createConnection({
       host: DB_HOST,
       port: DB_PORT,
       user: DB_USER,
-      password: DB_PASS
+      password: DB_PASS,
+      connectTimeout: 30000 // 30 seconds timeout
     });
 
-    console.log('Đang kết nối đến MySQL...', DB_HOST, DB_PORT);
+    console.log('✅ Connected to Railway MySQL');
 
-    // Tạo database nếu chưa tồn tại - sử dụng query thay vì execute
+    // Tạo database nếu chưa tồn tại
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    console.log(`✅ Database '${DB_NAME}' checked/created`);
     
-    // Đóng kết nối hiện tại và kết nối lại với database cụ thể
+    // Đóng kết nối và kết nối lại với database
     await connection.end();
     
     connection = await mysql.createConnection({
@@ -35,18 +42,16 @@ async function setupDatabase() {
       database: DB_NAME
     });
 
-    console.log('✅ Database', DB_NAME, 'đã được tạo/kiểm tra');
-
     // Tạo các bảng
     await createTables(connection);
     
     await connection.end();
-    console.log('✅ Thiết lập database hoàn tất!');
+    console.log('✅ Database setup completed on Railway!');
     
   } catch (error) {
-    console.error('❌ Lỗi thiết lập database:', error);
+    console.error('❌ Database setup error:', error.message);
     if (connection) await connection.end();
-    process.exit(1);
+    throw error;
   }
 }
 

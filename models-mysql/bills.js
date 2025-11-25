@@ -9,17 +9,14 @@ class Bill extends BaseModel {
   transformToMySQL(mongoData) {
     return {
       userID: mongoData.userID,
+      userMongoId: mongoData.userMongoId,
       firstName: mongoData.displayName?.firstName,
       lastName: mongoData.displayName?.lastName,
       listProduct: JSON.stringify(mongoData.listProduct || []),
       address: mongoData.address,
       paymentMethod: mongoData.paymentMethod,
       resquest: mongoData.resquest,
-      status: mongoData.status,
-      phoneNumber: mongoData.phoneNumber,
-      email: mongoData.email,
-      createdAt: mongoData.createdAt || new Date(),
-      updatedAt: mongoData.updatedAt || new Date()
+      status: mongoData.status
     };
   }
 
@@ -51,6 +48,7 @@ class Bill extends BaseModel {
     return {
       _id: mysqlData._id,
       userID: mysqlData.userID,
+      userMongoId: mysqlData.userMongoId,
       displayName: {
         firstName: mysqlData.firstName || '',
         lastName: mysqlData.lastName || ''
@@ -60,8 +58,6 @@ class Bill extends BaseModel {
       paymentMethod: mysqlData.paymentMethod || 'Thanh toán khi nhận hàng',
       resquest: mysqlData.resquest || '',
       status: mysqlData.status || 'Chờ xác nhận',
-      phoneNumber: mysqlData.phoneNumber || '',
-      email: mysqlData.email || '',
       createdAt: mysqlData.createdAt,
       updatedAt: mysqlData.updatedAt
     };

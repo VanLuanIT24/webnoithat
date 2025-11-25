@@ -515,23 +515,10 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
-                                                <% 
-                                                let totalRevenue = 0;
-                                                if (abc && abc.length > 0) {
-                                                    let completedOrders = abc.filter(order => order.status === "Đã giao");
-                                                    completedOrders.forEach(order => {
-                                                        if (order.listProduct && order.listProduct.length > 0) {
-                                                            order.listProduct.forEach(product => {
-                                                                totalRevenue += parseInt(product.productPrice || 0) * (product.amount || 0);
-                                                            });
-                                                        }
-                                                    });
-                                                }
-                                                %>
                                                 <h5 class="text-muted">Tổng doanh thu</h5>
-                                                <h2 class="mb-0 text-primary"><%= totalRevenue.toLocaleString('vi-VN') %>đ</h2>
+                                                <h2 class="mb-0 text-primary"><%= (typeof totalRevenue !== 'undefined' ? totalRevenue : 0).toLocaleString('vi-VN') %>₫</h2>
                                                 <small class="text-success">
-                                                    <i class="fas fa-arrow-up"></i> 12.5% so với tháng trước
+                                                    <i class="fas fa-arrow-up"></i> Tháng này: <%= (typeof revenueThisMonth !== 'undefined' ? revenueThisMonth : 0).toLocaleString('vi-VN') %>₫
                                                 </small>
                                             </div>
                                             <div class="card-icon">
@@ -588,18 +575,10 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
-                                                <% 
-                                                let cancelledOrders = 0;
-                                                let cancellationRate = 0;
-                                                if (abc && abc.length > 0) {
-                                                    cancelledOrders = abc.filter(order => order.status === "Đã hủy").length;
-                                                    cancellationRate = abc.length > 0 ? ((cancelledOrders / abc.length) * 100).toFixed(1) : 0;
-                                                }
-                                                %>
-                                                <h5 class="text-muted">Đơn hàng hủy</h5>
-                                                <h2 class="mb-0 text-danger"><%= cancelledOrders %></h2>
-                                                <small class="text-danger">
-                                                    Tỷ lệ hủy: <%= cancellationRate %>%
+                                                <h5 class="text-muted">Khách hàng</h5>
+                                                <h2 class="mb-0 text-success"><%= typeof customerCount !== 'undefined' ? customerCount : 0 %></h2>
+                                                <small class="text-success">
+                                                    <i class="fas fa-user-plus"></i> <%= typeof newCustomersThisMonth !== 'undefined' ? newCustomersThisMonth : 0 %> KH mới tháng này
                                                 </small>
                                             </div>
                                             <div class="card-icon">
@@ -636,8 +615,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <% if (abc && abc.length > 0) { 
-                                                        let recentOrders = abc.slice(-5).reverse();
+                                                    <% if (typeof recentOrders !== 'undefined' && recentOrders && recentOrders.length > 0) { 
                                                         recentOrders.forEach((order, index) => {
                                                             let totalAmount = 0;
                                                             let totalItems = 0;

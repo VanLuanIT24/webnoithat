@@ -5,14 +5,6 @@ class Admin extends BaseModel {
     super('admins');
   }
 
-  async findOne(query) {
-    // XỬ LÝ TRƯỜNG ĐẶC BIỆT: loginInformation.userName -> userName
-    if (query['loginInformation.userName']) {
-      return await super.findOne({ userName: query['loginInformation.userName'] });
-    }
-    return await super.findOne(query);
-  }
-
   transformToMySQL(mongoData) {
     return {
       firstName: mongoData.fullNameCustomer?.firstName,
@@ -78,8 +70,17 @@ class Admin extends BaseModel {
   }
 
   async findOne(query) {
-    const row = await super.findOne(query);
-    return this.transformToMongo(row);
+    // XỬ LÝ TRƯỜNG ĐẶC BIỆT: loginInformation.userName -> userName
+    let searchQuery = query;
+    if (query['loginInformation.userName']) {
+      searchQuery = { userName: query['loginInformation.userName'] };
+    }
+    
+    const row = await super.findOne(searchQuery);
+    // BUG FIX: baseModel.findOne() trả về array, phải lấy phần tử đầu tiên
+    if (!row || (Array.isArray(row) && row.length === 0)) return null;
+    const actualRow = Array.isArray(row) ? row[0] : row;
+    return this.transformToMongo(actualRow);
   }
 
   async findById(id) {
