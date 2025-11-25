@@ -8,7 +8,7 @@ const path = require("path");
 // process.env.DB_HOST = ...
 // process.env.DB_PORT = ...
 
-require("./config/database");
+const db = require("./config/database");
 
 // ======================================================
 // IMPORT ROUTES
@@ -40,15 +40,12 @@ const customerModel = require('./models-mysql/customers');
 // MYSQL SESSION STORE CONFIG
 // ======================================================
 const sessionStoreOptions = {
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
   clearExpired: true,
   checkExpirationInterval: 900000, // 15 phút
   expiration: 86400000, // 24 giờ
   createDatabaseTable: true,
+  endConnectionOnClose: true,
+  charset: 'utf8mb4_bin',
   schema: {
     tableName: 'sessions',
     columnNames: {
@@ -59,7 +56,13 @@ const sessionStoreOptions = {
   }
 };
 
-const sessionStore = new MySQLStore(sessionStoreOptions);
+// Sử dụng connection pool hiện có thay vì tạo mới
+const sessionStore = new MySQLStore(sessionStoreOptions, db);
+
+// Handle session store errors
+sessionStore.on('error', (error) => {
+  console.error('❌ Session store error:', error);
+});
 
 // ======================================================
 // PASSPORT – USER STRATEGY
@@ -172,6 +175,17 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname)));
 
 // ======================================================
+// HEALTH CHECK ENDPOINT (for Railway)
+// ======================================================
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// ======================================================
 // ROUTES
 // ======================================================
 app.use("/", index);
@@ -183,10 +197,23 @@ app.use("/support", support);
 app.use("/about", about);
 
 // ======================================================
+// ERROR HANDLING
+// ======================================================
+app.use((err, req, res, next) => {
+  console.error('❌ Application error:', err);
+  res.status(500).send('Internal Server Error');
+});
+
+// ======================================================
 // SERVER
 // ======================================================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+}).on('error', (err) => {
+  console.error('❌ Failed to start server:', err);
+  process.exit(1);
 });
