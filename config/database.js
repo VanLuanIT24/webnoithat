@@ -9,13 +9,20 @@ const dbConfig = {
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: parseInt(process.env.DB_CONN_LIMIT || '10', 10),
-  queueLimit: 0
+  queueLimit: 0,
+  charset: 'utf8mb4'
 };
 
-console.log("🔍 MySQL Config Loaded:", dbConfig);
+console.log("🔍 MySQL Config Loaded:", {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  database: dbConfig.database
+});
 
 const pool = mysql.createPool(dbConfig);
 
+// Test connection
 (async () => {
   try {
     const conn = await pool.getConnection();
