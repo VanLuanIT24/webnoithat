@@ -1,14 +1,18 @@
-require('dotenv').config(); // Load environment variables đầu tiên
+require('dotenv').config();
 
 const express = require("express");
 const app = express();
 const path = require("path");
 
-// Đặt DB_HOST và DB_PORT từ .env (nếu chưa có)
-process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
-process.env.DB_PORT = process.env.DB_PORT || '3306';
+// ❌ XÓA 2 dòng sai gây ghi đè ENV:
+// process.env.DB_HOST = ...
+// process.env.DB_PORT = ...
 
-require('./config/database');
+require("./config/database");
+
+// ======================================================
+// IMPORT ROUTES
+// ======================================================
 const index = require('./routes/index.router');
 const admin = require("./routes/admin.route");
 const product = require("./routes/product.route");
@@ -16,100 +20,75 @@ const categories = require("./routes/categories.route");
 const shipping = require('./routes/shipping.route');
 const support = require('./routes/support.route');
 const about = require('./routes/about.route');
-const PORT = process.env.PORT || 3000;
-// Nếu app chạy sau proxy (Railway), bật trust proxy để cookie secure và IP forwarding hoạt động
-app.set('trust proxy', 1);
+
+// ======================================================
+// EXPRESS + PASSPORT SETUP
+// ======================================================
+app.set("trust proxy", 1);
+
 const flash = require('connect-flash');
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
-// Import MySQL models
 const adminModel = require('./models-mysql/admins');
 const customerModel = require('./models-mysql/customers');
 
-// Cấu hình Passport Strategies - SỬA LẠI HOÀN TOÀN
-// Strategy cho user
-passport.use('user-local', new LocalStrategy({
-  usernameField: 'username',
-  passwordField: 'password',
-  passReqToCallback: true
-}, async (req, username, password, done) => {
-  try {
-    console.log('Trying to authenticate user:', username);
-    
-    // SỬA: Tìm user bằng userName
-    const user = await customerModel.findOne({ userName: username });
-    
-    if (!user) {
-      console.log('User not found');
-      return done(null, false, { message: 'Tài khoản không tồn tại!' });
-    }
-    
-    if (!user.loginInformation.password) {
-      console.log('Authentication failed: user has no password set:', username);
-      return done(null, false, { message: 'Tài khoản chưa đặt mật khẩu.' });
-    }
-    
-    const isMatch = await bcrypt.compare(password, user.loginInformation.password);
-    if (!isMatch) {
-      console.log('Password incorrect');
-      return done(null, false, { message: 'Mật khẩu không đúng!' });
-    }
-    
-    if (user.loginInformation.status === false) {
-      console.log('Account blocked');
-      return done(null, false, { message: 'Tài khoản đã bị khóa!' });
-    }
-    
-    console.log('User authenticated successfully');
-    return done(null, user);
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return done(error);
-  }
-}));
+// ======================================================
+// PASSPORT – USER STRATEGY
+// ======================================================
+passport.use(
+  "user-local",
+  new LocalStrategy(
+    { usernameField: "username", passwordField: "password" },
+    async (username, password, done) => {
+      try {
+        const user = await customerModel.findOne({ userName: username });
+        if (!user) return done(null, false, { message: "Tài khoản không tồn tại!" });
 
-// Strategy cho admin
-passport.use('admin-local', new LocalStrategy({
-  usernameField: 'username',
-  passwordField: 'password',
-  passReqToCallback: true
-}, async (req, username, password, done) => {
-  try {
-    console.log('Trying to authenticate admin:', username);
-    
-    // SỬA: Tìm admin bằng userName
-    const admin = await adminModel.findOne({ userName: username });
-    
-    if (!admin) {
-      console.log('Admin not found');
-      return done(null, false, { message: 'Tài khoản admin không tồn tại!' });
-    }
-    
-    console.log('DEBUG Admin found:', {
-      username: admin.loginInformation?.userName,
-      password: admin.loginInformation?.password,
-      inputPassword: password
-    });
-    
-    if (admin.loginInformation.password !== password) {
-      console.log('Admin password incorrect');
-      return done(null, false, { message: 'Mật khẩu không đúng!' });
-    }
-    
-    console.log('Admin authenticated successfully');
-    return done(null, admin);
-  } catch (error) {
-    console.error('Admin authentication error:', error);
-    return done(error);
-  }
-}));
+        const ok = await bcrypt.compare(password, user.loginInformation.password);
+        if (!ok) return done(null, false, { message: "Mật khẩu không đúng!" });
 
-// Serialize user
+        if (user.loginInformation.status === false)
+          return done(null, false, { message: "Tài khoản bị khóa!" });
+
+        return done(null, user);
+      } catch (e) {
+        return done(e);
+      }
+    }
+  )
+);
+
+// ======================================================
+// PASSPORT – ADMIN STRATEGY
+// ======================================================
+passport.use(
+  "admin-local",
+  new LocalStrategy(
+    { usernameField: "username", passwordField: "password" },
+    async (username, password, done) => {
+      try {
+        const admin = await adminModel.findOne({ userName: username });
+        if (!admin)
+          return done(null, false, { message: "Tài khoản admin không tồn tại!" });
+
+        if (admin.loginInformation.password !== password)
+          return done(null, false, { message: "Mật khẩu không đúng!" });
+
+        return done(null, admin);
+      } catch (e) {
+        return done(e);
+      }
+    }
+  )
+);
+
+// ======================================================
+// SERIALIZE
+// ======================================================
 passport.serializeUser((user, done) => {
-  console.log('Serializing user:', user.loginInformation?.userName);
   done(null, {
     id: user._id,
     username: user.loginInformation.userName,
@@ -117,77 +96,65 @@ passport.serializeUser((user, done) => {
   });
 });
 
-// Deserialize user
 passport.deserializeUser(async (sessionUser, done) => {
   try {
-    console.log('Deserializing user:', sessionUser);
-    
-    if (sessionUser.type === 'Admin') {
+    if (sessionUser.type === "Admin") {
       const admin = await adminModel.findOne({ userName: sessionUser.username });
-      done(null, admin);
+      return done(null, admin);
     } else {
       const user = await customerModel.findOne({ userName: sessionUser.username });
-      done(null, user);
+      return done(null, user);
     }
-  } catch (error) {
-    console.error('Deserialize error:', error);
-    done(error);
+  } catch (e) {
+    done(e);
   }
 });
 
+// ======================================================
+// MIDDLEWARE
+// ======================================================
 app.use(
   session({
     secret: "thesecret",
     saveUninitialized: true,
     resave: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+    cookie: { secure: false, maxAge: 86400000 }
   })
 );
 
-// Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Flash messages
 app.use(flash());
 
-// Make user available to all views
 app.use((req, res, next) => {
   res.locals.user = req.user;
   res.locals.isAuthenticated = req.isAuthenticated();
-  res.locals.success = req.flash('success');
-  res.locals.error = req.flash('error');
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
   next();
 });
 
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ extended: true, limit: "30mb" }));
 app.set("view engine", "ejs");
-app.set('view cache', false); // Disable view cache in development
-app.use(express.static(path.join(__dirname, "/")));
+app.use(express.static(path.join(__dirname)));
 
-// Router
+// ======================================================
+// ROUTES
+// ======================================================
 app.use("/", index);
-app.use('/admin', admin);
+app.use("/admin", admin);
 app.use("/product", product);
 app.use("/categories", categories);
-app.use('/shipping', shipping);
-app.use('/support', support);
-app.use('/about', about);
+app.use("/shipping", shipping);
+app.use("/support", support);
+app.use("/about", about);
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is started at: http://localhost:${PORT}`);
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} đã được sử dụng!`);
-    console.log('💡 Giải pháp:');
-    console.log('   1. Đổi PORT trong file .env');
-    console.log('   2. Hoặc kill process đang dùng port này:');
-    console.log(`      Windows: netstat -ano | findstr :${PORT}`);
-    console.log('      Sau đó: taskkill /PID <PID> /F');
-    process.exit(1);
-  } else {
-    console.error('❌ Server error:', err);
-    process.exit(1);
-  }
+// ======================================================
+// SERVER
+// ======================================================
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
