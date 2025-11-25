@@ -1,3 +1,7 @@
+// Ensure MySQL host/port default to IPv4 to avoid ::1 (IPv6) connection attempts
+process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
+process.env.DB_PORT = process.env.DB_PORT || '3306';
+
 const fs = require('fs');
 const path = require('path');
 const { setupDatabase } = require('./mysql-setup');

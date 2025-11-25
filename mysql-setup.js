@@ -4,29 +4,38 @@ const mysql = require('mysql2/promise');
 async function setupDatabase() {
   let connection;
   try {
+    // Read connection params from env with safe defaults (force IPv4 default)
+    const DB_HOST = process.env.DB_HOST || '127.0.0.1';
+    const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
+    const DB_USER = process.env.DB_USER || 'root';
+    const DB_PASS = process.env.DB_PASS || '10042004';
+    const DB_NAME = process.env.DB_NAME || 'webnoithat';
+
     // Kết nối tới MySQL (chưa chọn database)
     connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '10042004'
+      host: DB_HOST,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASS
     });
 
-    console.log('Đang kết nối đến MySQL...');
+    console.log('Đang kết nối đến MySQL...', DB_HOST, DB_PORT);
 
     // Tạo database nếu chưa tồn tại - sử dụng query thay vì execute
-    await connection.query('CREATE DATABASE IF NOT EXISTS webnoithat CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
     
     // Đóng kết nối hiện tại và kết nối lại với database cụ thể
     await connection.end();
     
     connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '10042004',
-      database: 'webnoithat'
+      host: DB_HOST,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASS,
+      database: DB_NAME
     });
 
-    console.log('✅ Database webnoithat đã được tạo/kiểm tra');
+    console.log('✅ Database', DB_NAME, 'đã được tạo/kiểm tra');
 
     // Tạo các bảng
     await createTables(connection);

@@ -1,6 +1,10 @@
 const express = require("express");
 const app = express();
 const path = require("path");
+// Ensure MySQL host/port default to IPv4 to avoid ::1 (IPv6) connection attempts
+process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
+process.env.DB_PORT = process.env.DB_PORT || '3306';
+
 require('./config/database');
 const index = require('./routes/index.router');
 const admin = require("./routes/admin.route");
