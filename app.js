@@ -51,11 +51,11 @@ async function initializeApp() {
     const passport = require("passport");
 
 const sessionStoreOptions = {
-  host: process.env.MYSQLHOST,
-  port: parseInt(process.env.MYSQLPORT),
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || 3306),
+  user: process.env.MYSQLUSER || process.env.DB_USER,
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
   clearExpired: true,
   checkExpirationInterval: 900000,
   expiration: 86400000,
