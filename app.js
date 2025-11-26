@@ -1,11 +1,10 @@
-// app.js
 require('dotenv').config();
 const express = require("express");
 const app = express();
 const path = require("path");
 
 // ======================================================
-// BASIC CONFIG - KHỞI TẠO ĐƠN GIẢN TRƯỚC
+// BASIC CONFIG
 // ======================================================
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ extended: true, limit: "30mb" }));
@@ -13,13 +12,14 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
 // ======================================================
-// HEALTH CHECK - ROUTE ĐẦU TIÊN, KHÔNG PHỤ THUỘC DATABASE
+// HEALTH CHECK ROUTES (KHÔNG CẦN DATABASE)
 // ======================================================
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
-    message: 'Server is starting up...',
-    timestamp: new Date().toISOString()
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    database: 'checking...'
   });
 });
 
@@ -31,37 +31,61 @@ app.get('/', (req, res) => {
 });
 
 // ======================================================
-// KHỞI TẠO DATABASE & SESSION STORE SAU
+// KHỞI TẠO DATABASE & APP
 // ======================================================
 async function initializeApp() {
   try {
     console.log("🔄 Initializing database connection...");
     
     const db = require("./config/database");
-    const conn = await db.getConnection();
-    conn.release();
-    console.log("✅ Database connected!");
+    
+    // Test connection với timeout
+    const connectionTest = await Promise.race([
+      db.testConnection(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database connection timeout')), 30000)
+      )
+    ]);
+
+    if (!connectionTest) {
+      throw new Error('Database connection test failed');
+    }
+
+    console.log("✅ Database connected successfully!");
 
     // ======================================================
-    // IMPORT ROUTES SAU KHI DATABASE READY
+    // CẤU HÌNH SESSION STORE
     // ======================================================
     const flash = require('connect-flash');
     const session = require("express-session");
     const MySQLStore = require('express-mysql-session')(session);
     const passport = require("passport");
 
-const sessionStoreOptions = {
-  host: process.env.MYSQLHOST || process.env.DB_HOST,
-  port: parseInt(process.env.MYSQLPORT || process.env.DB_PORT || 3306),
-  user: process.env.MYSQLUSER || process.env.DB_USER,
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
-  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
-  clearExpired: true,
-  checkExpirationInterval: 900000,
-  expiration: 86400000,
-  createDatabaseTable: true,
-  charset: 'utf8mb4_bin',
-};
+    // Sử dụng cùng config với database connection
+    const DB_HOST = process.env.MYSQLHOST || process.env.DB_HOST;
+    const DB_PORT = parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306');
+    const DB_USER = process.env.MYSQLUSER || process.env.DB_USER;
+    const DB_PASSWORD = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD;
+    const DB_NAME = process.env.MYSQLDATABASE || process.env.DB_NAME;
+
+    const sessionStoreOptions = {
+      host: DB_HOST,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_NAME,
+      clearExpired: true,
+      checkExpirationInterval: 900000,
+      expiration: 86400000,
+      createDatabaseTable: true,
+      charset: 'utf8mb4_bin',
+      connectionLimit: 10,
+      connectTimeout: 60000,
+      acquireTimeout: 60000,
+      timeout: 60000,
+    };
+
+    console.log("🔄 Initializing session store...");
     const sessionStore = new MySQLStore(sessionStoreOptions);
 
     // Session middleware
@@ -72,7 +96,7 @@ const sessionStoreOptions = {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 86400000
       }
@@ -94,6 +118,8 @@ const sessionStoreOptions = {
     // ======================================================
     // IMPORT & USE ROUTES
     // ======================================================
+    console.log("🔄 Loading routes...");
+    
     const index = require('./routes/index.router');
     const admin = require("./routes/admin.route");
     const product = require("./routes/product.route");
@@ -110,7 +136,7 @@ const sessionStoreOptions = {
     app.use("/support", support);
     app.use("/about", about);
 
-    // Update health check
+    // Update health check sau khi database ready
     app.get('/health', (req, res) => {
       res.status(200).json({ 
         status: 'READY', 
@@ -123,15 +149,16 @@ const sessionStoreOptions = {
       res.redirect('/home');
     });
 
-    console.log("✅ All routes initialized!");
+    console.log("✅ All routes initialized successfully!");
 
   } catch (error) {
     console.error('❌ Initialization failed:', error);
     
     // Fallback routes khi khởi tạo thất bại
     app.get('*', (req, res) => {
-      res.status(500).json({
-        error: 'Application initializing...',
+      res.status(503).json({
+        status: 'initializing',
+        error: 'Application is starting up...',
         message: 'Please refresh the page in a few moments'
       });
     });
@@ -139,17 +166,21 @@ const sessionStoreOptions = {
 }
 
 // ======================================================
-// START SERVER - KHỞI ĐỘNG SERVER TRƯỚC, INIT SAU
+// START SERVER
 // ======================================================
 const PORT = process.env.PORT || 3000;
 
+console.log("🚀 Starting server...");
+console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log(`🔑 Available ENV keys:`, Object.keys(process.env).filter(key => 
+  key.includes('MYSQL') || key.includes('DB') || key.includes('DATABASE')
+));
+
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Server is running on port ${PORT}`);
   
   // Khởi tạo app bất đồng bộ sau khi server đã start
   initializeApp();
 });
 
-// Timeout để tránh treo
 server.setTimeout(30000);
