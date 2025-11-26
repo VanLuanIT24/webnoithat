@@ -1,3 +1,8 @@
+// Chỉ require dotenv khi development
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const express = require("express");
 const app = express();
 const path = require("path");
@@ -11,91 +16,100 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
 // ======================================================
-// HEALTH CHECK ROUTES (KHÔNG CẦN DATABASE)
+// HEALTH CHECK
 // ======================================================
 app.get('/health', (req, res) => {
   res.status(200).json({ 
-    status: 'OK', 
+    status: 'OK',
     message: 'Server is running',
     timestamp: new Date().toISOString(),
-    database: 'checking...'
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'Application is starting...',
-    status: 'initializing'
+    message: 'Welcome to Railway App!',
+    status: 'running',
+    check_health: '/health'
   });
 });
 
 // ======================================================
-// KHỞI TẠO DATABASE & APP
+// SIMPLE ROUTES KHÔNG CẦN DATABASE
 // ======================================================
-async function initializeApp() {
+app.get('/home', (req, res) => {
+  res.json({ message: 'Home page - Database connection in progress' });
+});
+
+// ======================================================
+// DATABASE CONNECTION
+// ======================================================
+async function initializeDatabase() {
   try {
     console.log("🔄 Initializing database connection...");
     
     const db = require("./config/database");
     
-    // Test connection với timeout
-    const connectionTest = await Promise.race([
-      db.testConnection(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database connection timeout')), 30000)
-      )
-    ]);
+    // Test connection đơn giản
+    const connection = await db.getConnection();
+    console.log('✅ Database connected successfully!');
+    connection.release();
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    return false;
+  }
+}
 
-    if (!connectionTest) {
-      throw new Error('Database connection test failed');
+// ======================================================
+// INITIALIZE APP
+// ======================================================
+async function initializeApp() {
+  try {
+    console.log("🔄 Starting application initialization...");
+    
+    // Kết nối database
+    const dbConnected = await initializeDatabase();
+    
+    if (!dbConnected) {
+      throw new Error('Database connection failed');
     }
 
-    console.log("✅ Database connected successfully!");
-
     // ======================================================
-    // CẤU HÌNH SESSION STORE
+    // SETUP SESSION & PASSPORT
     // ======================================================
     const flash = require('connect-flash');
     const session = require("express-session");
     const MySQLStore = require('express-mysql-session')(session);
     const passport = require("passport");
 
-    // Sử dụng cùng config với database connection
-    const DB_HOST = process.env.MYSQLHOST || process.env.DB_HOST;
-    const DB_PORT = parseInt(process.env.MYSQLPORT || process.env.DB_PORT || '3306');
-    const DB_USER = process.env.MYSQLUSER || process.env.DB_USER;
-    const DB_PASSWORD = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD;
-    const DB_NAME = process.env.MYSQLDATABASE || process.env.DB_NAME;
-
+    // Session store configuration - SỬ DỤNG TRỰC TIẾP GIÁ TRỊ
     const sessionStoreOptions = {
-      host: DB_HOST,
-      port: DB_PORT,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: DB_NAME,
+      host: process.env.MYSQLHOST || 'switchback.proxy.rlwy.net',
+      port: parseInt(process.env.MYSQLPORT || '28295'),
+      user: process.env.MYSQLUSER || 'root',
+      password: process.env.MYSQLPASSWORD || 'YeakDPlKQyydaJjcmShgqHXyXoYOAmaS',
+      database: process.env.MYSQLDATABASE || 'railway',
       clearExpired: true,
       checkExpirationInterval: 900000,
       expiration: 86400000,
       createDatabaseTable: true,
       charset: 'utf8mb4_bin',
-      connectionLimit: 10,
-      connectTimeout: 60000,
-      acquireTimeout: 60000,
-      timeout: 60000,
     };
 
     console.log("🔄 Initializing session store...");
     const sessionStore = new MySQLStore(sessionStoreOptions);
 
-    // Session middleware
     app.use(session({
       key: 'session_cookie_name',
-      secret: process.env.SESSION_SECRET || 'railway-secret-key',
+      secret: process.env.SESSION_SECRET || 'railway-secret-key-change-this-to-random-string',
       store: sessionStore,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         httpOnly: true,
         maxAge: 86400000
       }
@@ -115,14 +129,14 @@ async function initializeApp() {
     });
 
     // ======================================================
-    // IMPORT & USE ROUTES
+    // LOAD ROUTES
     // ======================================================
     console.log("🔄 Loading routes...");
     
     const index = require('./routes/index.router');
     const admin = require("./routes/admin.route");
     const product = require("./routes/product.route");
-    const categories = require("./routes/categories.route");
+    const categories = require("./routes/categories.route');
     const shipping = require('./routes/shipping.route');
     const support = require('./routes/support.route');
     const about = require('./routes/about.route');
@@ -135,7 +149,9 @@ async function initializeApp() {
     app.use("/support", support);
     app.use("/about", about);
 
-    // Update health check sau khi database ready
+    console.log("✅ All routes initialized!");
+
+    // Update health check
     app.get('/health', (req, res) => {
       res.status(200).json({ 
         status: 'READY', 
@@ -148,17 +164,15 @@ async function initializeApp() {
       res.redirect('/home');
     });
 
-    console.log("✅ All routes initialized successfully!");
-
   } catch (error) {
-    console.error('❌ Initialization failed:', error);
+    console.error('❌ App initialization failed:', error.message);
     
-    // Fallback routes khi khởi tạo thất bại
+    // Fallback routes
     app.get('*', (req, res) => {
-      res.status(503).json({
-        status: 'initializing',
-        error: 'Application is starting up...',
-        message: 'Please refresh the page in a few moments'
+      res.status(200).json({
+        status: 'starting',
+        message: 'Application is starting up, please wait...',
+        error: error.message
       });
     });
   }
@@ -171,14 +185,12 @@ const PORT = process.env.PORT || 3000;
 
 console.log("🚀 Starting server...");
 console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🔑 Available ENV keys:`, Object.keys(process.env).filter(key => 
-  key.includes('MYSQL') || key.includes('DB') || key.includes('DATABASE')
-));
+console.log(`🔧 Port: ${PORT}`);
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server is running on port ${PORT}`);
   
-  // Khởi tạo app bất đồng bộ sau khi server đã start
+  // Khởi tạo app
   initializeApp();
 });
 
