@@ -50,21 +50,19 @@ async function initializeApp() {
     const session = require("express-session");
     const MySQLStore = require('express-mysql-session')(session);
     const passport = require("passport");
-
-    // Session store config
-    const sessionStoreOptions = {
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '3306', 10),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      clearExpired: true,
-      checkExpirationInterval: 900000,
-      expiration: 86400000,
-      createDatabaseTable: true,
-      charset: 'utf8mb4_bin'
-    };
-
+    
+const sessionStoreOptions = {
+  host: process.env.MYSQLHOST,
+  port: parseInt(process.env.MYSQLPORT || '3306', 10),
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  clearExpired: true,
+  checkExpirationInterval: 900000,
+  expiration: 86400000,
+  createDatabaseTable: true,
+  charset: 'utf8mb4_bin',
+};
     const sessionStore = new MySQLStore(sessionStoreOptions);
 
     // Session middleware
