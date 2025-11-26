@@ -1,35 +1,24 @@
-// Chỉ require dotenv khi development
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
+require("dotenv").config();
 const mysql = require("mysql2/promise");
 
 console.log("💾 Loading Database Config...");
-
-// TRỰC TIẾP sử dụng giá trị từ Railway MySQL service
-const DB_CONFIG = {
-  host: process.env.MYSQLHOST || 'switchback.proxy.rlwy.net',
-  user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || 'YeakDPlKQyydaJjcmShgqHXyXoYOAmaS',
-  database: process.env.MYSQLDATABASE || 'railway',
-  port: parseInt(process.env.MYSQLPORT || '28295'),
-  waitForConnections: true,
-  connectionLimit: parseInt(process.env.DB_CONN_LIMIT || '10'),
-  queueLimit: 0,
-  connectTimeout: 60000,
-  acquireTimeout: 60000,
-  timeout: 60000,
-};
-
-console.log("🔍 Database Config:", {
-  host: DB_CONFIG.host,
-  user: DB_CONFIG.user,
-  password: DB_CONFIG.password ? '***' : 'NOT SET',
-  database: DB_CONFIG.database,
-  port: DB_CONFIG.port
+console.log("🔍 ENV variables received:", {
+  MYSQLHOST: process.env.MYSQLHOST,
+  MYSQLUSER: process.env.MYSQLUSER,
+  MYSQLPASSWORD: process.env.MYSQLPASSWORD ? "***" : "undefined",
+  MYSQLDATABASE: process.env.MYSQLDATABASE,
+  MYSQLPORT: process.env.MYSQLPORT
 });
 
-const pool = mysql.createPool(DB_CONFIG);
+const pool = mysql.createPool({
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: Number(process.env.MYSQLPORT),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 module.exports = pool;
