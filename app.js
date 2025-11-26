@@ -136,7 +136,7 @@ async function initializeApp() {
     const index = require('./routes/index.router');
     const admin = require("./routes/admin.route");
     const product = require("./routes/product.route");
-    const categories = require("./routes/categories.route');
+    const categories = require("./routes/categories.route");
     const shipping = require('./routes/shipping.route');
     const support = require('./routes/support.route');
     const about = require('./routes/about.route');
