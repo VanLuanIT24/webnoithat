@@ -8,7 +8,8 @@
     "dev": "nodemon app.js",
     "setup": "node mysql-setup.js",
     "import": "node import-from-json.js",
-    "test": "node test-railway-connection.js"
+    "test": "node test-railway-connection.js",
+    "check-env": "node check-env.js"
   },
   "keywords": [],
   "author": "",
