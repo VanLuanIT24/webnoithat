@@ -1,9 +1,8 @@
 // app.js
-
+require('dotenv').config();
 const express = require("express");
 const app = express();
 const path = require("path");
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // ======================================================
 // BASIC CONFIG - KHỞI TẠO ĐƠN GIẢN TRƯỚC
@@ -50,10 +49,10 @@ async function initializeApp() {
     const session = require("express-session");
     const MySQLStore = require('express-mysql-session')(session);
     const passport = require("passport");
-    
+
 const sessionStoreOptions = {
   host: process.env.MYSQLHOST,
-  port: parseInt(process.env.MYSQLPORT || '3306', 10),
+  port: parseInt(process.env.MYSQLPORT),
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
