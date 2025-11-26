@@ -6,7 +6,7 @@ const DB_HOST = process.env.MYSQLHOST || process.env.DB_HOST;
 const DB_USER = process.env.MYSQLUSER || process.env.DB_USER;
 const DB_PASSWORD = process.env.MYSQLPASSWORD || process.env.DB_PASSWORD;
 const DB_NAME = process.env.MYSQLDATABASE || process.env.DB_NAME;
-const DB_PORT = process.env.MYSQLPORT || process.env.DB_PORT || 3306;
+const DB_PORT = process.env.MYSQLPORT || process.env.DB_PORT;
 
 console.log("💾 Loading Database Config...");
 console.log("🔍 ENV variables received:", {
