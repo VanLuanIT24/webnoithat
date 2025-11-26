@@ -16,12 +16,12 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
 // ======================================================
-// HEALTH CHECK
+// HEALTH CHECK & BASIC ROUTES - KHÔNG CẦN DATABASE
 // ======================================================
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK',
-    message: 'Server is running',
+    message: 'Server is running without database',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -30,168 +30,66 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Welcome to Railway App!',
-    status: 'running',
+    status: 'running - database disabled',
     check_health: '/health'
   });
 });
 
-// ======================================================
-// SIMPLE ROUTES KHÔNG CẦN DATABASE
-// ======================================================
 app.get('/home', (req, res) => {
-  res.json({ message: 'Home page - Database connection in progress' });
+  res.json({ 
+    message: 'Home page',
+    note: 'Database connection is temporarily disabled'
+  });
 });
 
 // ======================================================
-// DATABASE CONNECTION
+// ROUTES KHÔNG CẦN DATABASE
 // ======================================================
-async function initializeDatabase() {
-  try {
-    console.log("🔄 Initializing database connection...");
-    
-    const db = require("./config/database");
-    
-    // Test connection đơn giản
-    const connection = await db.getConnection();
-    console.log('✅ Database connected successfully!');
-    connection.release();
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    return false;
-  }
-}
+app.get('/about', (req, res) => {
+  res.json({ message: 'About page - basic version' });
+});
+
+app.get('/support', (req, res) => {
+  res.json({ message: 'Support page - basic version' });
+});
+
+app.get('/shipping', (req, res) => {
+  res.json({ message: 'Shipping info - basic version' });
+});
 
 // ======================================================
-// INITIALIZE APP
+// INITIALIZE APP - KHÔNG DATABASE
 // ======================================================
 async function initializeApp() {
   try {
-    console.log("🔄 Starting application initialization...");
+    console.log("🔄 Starting application WITHOUT database...");
     
-    // Kết nối database
-    const dbConnected = await initializeDatabase();
+    // TẠM THỜI KHÔNG KẾT NỐI DATABASE
+    console.log("⏸️  Database connection temporarily disabled");
     
-    if (!dbConnected) {
-      throw new Error('Database connection failed');
-    }
-
-    // ======================================================
-    // SETUP SESSION & PASSPORT
-    // ======================================================
-    const flash = require('connect-flash');
-    const session = require("express-session");
-    const MySQLStore = require('express-mysql-session')(session);
-    const passport = require("passport");
-
-    // Session store configuration - SỬ DỤNG TRỰC TIẾP GIÁ TRỊ
-    const sessionStoreOptions = {
-      host: process.env.MYSQLHOST || 'switchback.proxy.rlwy.net',
-      port: parseInt(process.env.MYSQLPORT || '28295'),
-      user: process.env.MYSQLUSER || 'root',
-      password: process.env.MYSQLPASSWORD || 'YeakDPlKQyydaJjcmShgqHXyXoYOAmaS',
-      database: process.env.MYSQLDATABASE || 'railway',
-      clearExpired: true,
-      checkExpirationInterval: 900000,
-      expiration: 86400000,
-      createDatabaseTable: true,
-      charset: 'utf8mb4_bin',
-    };
-
-    console.log("🔄 Initializing session store...");
-    const sessionStore = new MySQLStore(sessionStoreOptions);
-
-    app.use(session({
-      key: 'session_cookie_name',
-      secret: process.env.SESSION_SECRET || 'railway-secret-key-change-this-to-random-string',
-      store: sessionStore,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: false,
-        httpOnly: true,
-        maxAge: 86400000
-      }
-    }));
-
-    app.use(passport.initialize());
-    app.use(passport.session());
-    app.use(flash());
-
-    // Global variables
-    app.use((req, res, next) => {
-      res.locals.user = req.user;
-      res.locals.isAuthenticated = req.isAuthenticated();
-      res.locals.success = req.flash("success");
-      res.locals.error = req.flash("error");
-      next();
-    });
-
-    // ======================================================
-    // LOAD ROUTES
-    // ======================================================
-    console.log("🔄 Loading routes...");
+    // Load basic routes không cần database
+    console.log("✅ Basic routes initialized!");
     
-    const index = require('./routes/index.router');
-    const admin = require("./routes/admin.route");
-    const product = require("./routes/product.route");
-    const categories = require("./routes/categories.route");
-    const shipping = require('./routes/shipping.route');
-    const support = require('./routes/support.route');
-    const about = require('./routes/about.route');
-
-    app.use("/", index);
-    app.use("/admin", admin);
-    app.use("/product", product);
-    app.use("/categories", categories);
-    app.use("/shipping", shipping);
-    app.use("/support", support);
-    app.use("/about", about);
-
-    console.log("✅ All routes initialized!");
-
-    // Update health check
-    app.get('/health', (req, res) => {
-      res.status(200).json({ 
-        status: 'READY', 
-        database: 'connected',
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    app.get('/', (req, res) => {
-      res.redirect('/home');
-    });
-
   } catch (error) {
     console.error('❌ App initialization failed:', error.message);
-    
-    // Fallback routes
-    app.get('*', (req, res) => {
-      res.status(200).json({
-        status: 'starting',
-        message: 'Application is starting up, please wait...',
-        error: error.message
-      });
-    });
   }
 }
 
 // ======================================================
-// START SERVER
+// START SERVER - ƯU TIÊN SERVER CHẠY TRƯỚC
 // ======================================================
 const PORT = process.env.PORT || 3000;
 
-console.log("🚀 Starting server...");
+console.log("🚀 Starting server (FAST MODE - no database)...");
 console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`🔧 Port: ${PORT}`);
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`✅ Server is running FAST on port ${PORT}`);
+  console.log(`🌐 Access your app now!`);
   
-  // Khởi tạo app
+  // Khởi tạo app (không database)
   initializeApp();
 });
 
-server.setTimeout(30000);
+server.setTimeout(10000);
